@@ -525,7 +525,7 @@ fn test_fq_repr_sub_noborrow() {
 
     for _ in 0..1000 {
         let mut a = FqRepr::rand(&mut rng);
-        a.0[5] >>= 30;
+        a.0[11] >>= 30;
         let mut b = a;
         for _ in 0..10 {
             b.mul2();
@@ -535,8 +535,8 @@ fn test_fq_repr_sub_noborrow() {
             c.mul2();
         }
 
-        // assert!(a < b);
-        // assert!(b < c);
+        assert!(a < b);
+        assert!(b < c);
 
         let mut csub_ba = c;
         csub_ba.sub_noborrow(&b);
