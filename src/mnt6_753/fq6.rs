@@ -131,11 +131,6 @@ impl Field for Fq6 {
     }
 }
 
-/*
-#[cfg(test)]
-use rand::{SeedableRng, XorShiftRng};
-*/
-
 #[test]
 fn fq6_field_tests() {
     use ff::PrimeField;
