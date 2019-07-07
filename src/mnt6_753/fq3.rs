@@ -1,5 +1,5 @@
-use super::fq::{Fq, FQ3_NQR_T, FQ3_T_MINUS_1, FROBENIUS_COEFF_FQ3_C1};
-use ff::{Field, SqrtField};
+use super::fq::{Fq, FQ3_NQR_T, FQ3_T_MINUS_1, FROBENIUS_COEFF_FQ3_C1, FROBENIUS_COEFF_FQ3_C2};
+use ff::{Field, SqrtField };
 use rand::{Rand, Rng};
 use ff::LegendreSymbol::{ QuadraticNonResidue, QuadraticResidue, Zero };
 
@@ -43,26 +43,26 @@ impl PartialOrd for Fq3 {
 }
 
 impl Fq3 {
-    /// Multiply by quadratic nonresidue v.
-    // (nonresidue * c2, c0, c1)
-    // TODO
+
     pub fn mul_by_nonresidue(&mut self) {
-        use std::mem::swap;
-        swap(&mut self.c0, &mut self.c1); // (c1, c0, c2)
-        swap(&mut self.c0, &mut self.c2); // (c2, c0, c1)
-        self.c0.mul_by_nonresidue(); // (nr * c2, c0, c1)
+        self.c0.mul_by_nonresidue();
+        self.c1.mul_by_nonresidue();
+        self.c2.mul_by_nonresidue();
     }
 
     /// Norm of Fq3 as extension field in i over Fq
-    // TODO
     pub fn norm(&self) -> Fq {
-        let mut t0 = self.c0;
-        let mut t1 = self.c1;
-        t0.square();
-        t1.square();
-        t1.add_assign(&t0);
+        // From ZEXE's code
+        let mut self_to_p2 = *self;
+        self_to_p2.frobenius_map(2);
+        let mut self_to_p = *self;
+        self_to_p.frobenius_map(1);
 
-        t1
+        self_to_p.mul_assign(&self_to_p2); 
+        self_to_p.mul_assign(&self);
+        
+        assert!(self_to_p.c1.is_zero() && self_to_p.c2.is_zero());
+        self_to_p.c0
     }
 }
 
@@ -123,7 +123,7 @@ impl Field for Fq3 {
 
     fn frobenius_map(&mut self, power: usize) {
         self.c1.mul_assign(&FROBENIUS_COEFF_FQ3_C1[power % 3]);
-        self.c2.mul_assign(&FROBENIUS_COEFF_FQ3_C1[power % 3]);
+        self.c2.mul_assign(&FROBENIUS_COEFF_FQ3_C2[power % 3]);
     }
 
     /* from https://github.com/scipr-lab/libff/blob/f2067162520f91438b44e71a2cab2362f1c3cab4/libff/algebra/fields/fp3.tcc#L100
@@ -303,6 +303,7 @@ fn legendre(x: &Fq3) -> ::ff::LegendreSymbol {
     x.norm().legendre()
 }
 
+
 impl SqrtField for Fq3 {
     fn legendre(&self) -> ::ff::LegendreSymbol {
         legendre(self)
@@ -353,11 +354,39 @@ impl SqrtField for Fq3 {
     }
 }
 
+
+#[test]
+fn test_fq3_mul_nonresidue() {
+
+    use ::rand::{ XorShiftRng, SeedableRng, Rand };
+    use super::fq::{ NON_RESIDUE };
+
+    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+
+    let non_residue = NON_RESIDUE;
+    let nqr = Fq3 {
+        c0: non_residue,
+        c1: Fq::zero(),
+        c2: Fq::zero(),
+    };
+
+    for _ in 0..1000 {
+        let mut a = Fq3::rand(&mut rng);
+        let mut b = a;
+        a.mul_by_nonresidue();
+        b.mul_assign(&nqr);
+
+        assert_eq!(a, b);
+    }
+}
+
 #[test]
 fn fq3_field_tests() {
-    // use ff::PrimeField;
+    use ff::PrimeField;
 
     ::tests::field::random_field_tests::<Fq3>();
     ::tests::field::random_sqrt_tests::<Fq3>();
-    //   ::tests::field::random_frobenius_tests::<Fq3, _>(super::fq::Fq::char(), 13);
+    ::tests::field::random_frobenius_tests::<Fq3, _>(super::fq::Fq::char(), 13);
 }
+
+
