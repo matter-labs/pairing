@@ -283,6 +283,19 @@ fn test_fq2_basics() {
 }
 
 #[test]
+fn test_fq2_legendre() {
+    use ff::LegendreSymbol::*;
+
+    assert_eq!(Zero, Fq2::zero().legendre());
+    // i^2 = -1
+    let mut m1 = Fq2::one();
+    m1.negate();
+    assert_eq!(QuadraticResidue, m1.legendre());
+    m1.mul_by_nonresidue();
+    assert_eq!(QuadraticNonResidue, m1.legendre());
+}
+
+#[test]
 fn test_fq2_squaring() {
     use super::fq::FqRepr;
     use ff::PrimeField;
@@ -313,48 +326,36 @@ fn test_fq2_squaring() {
             c1: Fq::zero(),
         }
     }); // -1
+}
 
-    #[test]
-    fn test_fq2_legendre() {
-        use ff::LegendreSymbol::*;
+#[cfg(test)]
+use rand::{SeedableRng, XorShiftRng};
 
-        assert_eq!(Zero, Fq2::zero().legendre());
-        // i^2 = -1
-        let mut m1 = Fq2::one();
-        m1.negate();
-        assert_eq!(QuadraticResidue, m1.legendre());
-        m1.mul_by_nonresidue();
-        assert_eq!(QuadraticNonResidue, m1.legendre());
-    }
+#[test]
+fn test_fq2_mul_nonresidue() {
+    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
 
-    #[cfg(test)]
-    use rand::{SeedableRng, XorShiftRng};
+    let nqr = Fq2 {
+        c0: Fq::one(),
+        c1: Fq::one(),
+    };
 
-    #[test]
-    fn test_fq2_mul_nonresidue() {
-        let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    for _ in 0..1000 {
+        let mut a = Fq2::rand(&mut rng);
+        let mut b = a;
+        a.mul_by_nonresidue();
+        b.mul_assign(&nqr);
 
-        let nqr = Fq2 {
-            c0: Fq::one(),
-            c1: Fq::one(),
-        };
-
-        for _ in 0..1000 {
-            let mut a = Fq2::rand(&mut rng);
-            let mut b = a;
-            a.mul_by_nonresidue();
-            b.mul_assign(&nqr);
-
-            assert_eq!(a, b);
-        }
-    }
-
-    #[test]
-    fn fq2_field_tests() {
-        use ff::PrimeField;
-
-        ::tests::field::random_field_tests::<Fq2>();
-        ::tests::field::random_sqrt_tests::<Fq2>();
-        ::tests::field::random_frobenius_tests::<Fq2, _>(super::fq::Fq::char(), 13);
+        assert_eq!(a, b);
     }
 }
+
+#[test]
+fn fq2_field_tests() {
+    use ff::PrimeField;
+
+    ::tests::field::random_field_tests::<Fq2>();
+    ::tests::field::random_sqrt_tests::<Fq2>();
+    ::tests::field::random_frobenius_tests::<Fq2, _>(super::fq::Fq::char(), 13);
+}
+
