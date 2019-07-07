@@ -50,6 +50,12 @@ impl Fq3 {
         self.c2.mul_by_nonresidue();
     }
 
+    pub fn mul_by_fp(&mut self, other: &Fq) {
+        self.c0.mul_assign(&other);
+        self.c1.mul_assign(&other);
+        self.c2.mul_assign(&other);
+    }
+
     /// Norm of Fq3 as extension field in i over Fq
     pub fn norm(&self) -> Fq {
         // From ZEXE's code

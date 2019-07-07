@@ -74,9 +74,7 @@ impl Field for Fq6 {
         self.c0.frobenius_map(power);
         self.c1.frobenius_map(power);
 
-        self.c1.c0.mul_assign(&FROBENIUS_COEFF_FQ6_C1[power % 6]);
-        self.c1.c1.mul_assign(&FROBENIUS_COEFF_FQ6_C1[power % 6]);
-        self.c1.c2.mul_assign(&FROBENIUS_COEFF_FQ6_C1[power % 6]);
+        self.c1.mul_by_fp(&FROBENIUS_COEFF_FQ6_C1[power % 6]);
     }
 
     fn square(&mut self) {
