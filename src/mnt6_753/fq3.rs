@@ -44,12 +44,14 @@ impl PartialOrd for Fq3 {
 
 impl Fq3 {
 
+    #[inline(always)]
     pub fn mul_by_nonresidue(&mut self) {
         self.c0.mul_by_nonresidue();
         self.c1.mul_by_nonresidue();
         self.c2.mul_by_nonresidue();
     }
 
+    #[inline(always)]
     pub fn mul_by_fp(&mut self, other: &Fq) {
         self.c0.mul_assign(&other);
         self.c1.mul_assign(&other);
@@ -57,6 +59,7 @@ impl Fq3 {
     }
 
     /// Norm of Fq3 as extension field in i over Fq
+    #[inline(always)]
     pub fn norm(&self) -> Fq {
         // From ZEXE's code
         let mut self_to_p2 = *self;
@@ -83,6 +86,7 @@ impl Rand for Fq3 {
 }
 
 impl Field for Fq3 {
+    #[inline(always)]
     fn zero() -> Self {
         Fq3 {
             c0: Fq::zero(),
@@ -91,6 +95,7 @@ impl Field for Fq3 {
         }
     }
 
+    #[inline(always)]
     fn one() -> Self {
         Fq3 {
             c0: Fq::one(),
@@ -99,34 +104,40 @@ impl Field for Fq3 {
         }
     }
 
+    #[inline(always)]
     fn is_zero(&self) -> bool {
         self.c0.is_zero() && self.c1.is_zero() && self.c2.is_zero()
     }
 
+    #[inline(always)]
     fn double(&mut self) {
         self.c0.double();
         self.c1.double();
         self.c2.double();
     }
 
+    #[inline(always)]
     fn negate(&mut self) {
         self.c0.negate();
         self.c1.negate();
         self.c2.negate();
     }
 
+    #[inline(always)]
     fn add_assign(&mut self, other: &Self) {
         self.c0.add_assign(&other.c0);
         self.c1.add_assign(&other.c1);
         self.c2.add_assign(&other.c2);
     }
 
+    #[inline(always)]
     fn sub_assign(&mut self, other: &Self) {
         self.c0.sub_assign(&other.c0);
         self.c1.sub_assign(&other.c1);
         self.c2.sub_assign(&other.c2);
     }
 
+    #[inline(always)]
     fn frobenius_map(&mut self, power: usize) {
         self.c1.mul_assign(&FROBENIUS_COEFF_FQ3_C1[power % 3]);
         self.c2.mul_assign(&FROBENIUS_COEFF_FQ3_C2[power % 3]);
@@ -134,6 +145,7 @@ impl Field for Fq3 {
 
     /* from https://github.com/scipr-lab/libff/blob/f2067162520f91438b44e71a2cab2362f1c3cab4/libff/algebra/fields/fp3.tcc#L100
     Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 4 (CH-SQR2) */
+    #[inline(always)]
     fn square(&mut self) {
         let mut s0 = self.c0;
         s0.square();
@@ -170,6 +182,7 @@ impl Field for Fq3 {
         self.c2.sub_assign(&s4);
     }
 
+    #[inline(always)]
     fn mul_assign(&mut self, other: &Self) {
         let mut a_a = self.c0;
         let mut b_b = self.c1;
@@ -226,6 +239,7 @@ impl Field for Fq3 {
 
     // from https://github.com/scipr-lab/libff/blob/f2067162520f91438b44e71a2cab2362f1c3cab4/libff/algebra/fields/fp3.tcc#L119
     /* From "High-Speed Software Implementation of the Optimal Ate Pairing over Barreto-Naehrig Curves"; Algorithm 17 */
+    #[inline(always)]
     fn inverse(&self) -> Option<Self> {
         let mut t0 = self.c0;
         t0.square();
@@ -281,6 +295,7 @@ impl Field for Fq3 {
     }
 }
 
+#[inline(always)]
 fn pow(base: &Fq3, exp: [u64; 36]) -> Fq3 {
     let mut res = Fq3::one();
 
@@ -305,16 +320,20 @@ fn pow(base: &Fq3, exp: [u64; 36]) -> Fq3 {
     res
 }
 
+#[inline(always)]
 fn legendre(x: &Fq3) -> ::ff::LegendreSymbol {
     x.norm().legendre()
 }
 
 
 impl SqrtField for Fq3 {
+    
+    #[inline(always)]
     fn legendre(&self) -> ::ff::LegendreSymbol {
         legendre(self)
     }
 
+    #[inline(always)]
     fn sqrt(&self) -> Option<Self> {
         match self.legendre() {
             Zero => Some(*self),

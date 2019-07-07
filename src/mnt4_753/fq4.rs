@@ -27,12 +27,16 @@ impl Rand for Fq4 {
 }
 
 impl Fq4 {
+
+    #[inline(always)]
     pub fn conjugate(&mut self) {
         self.c1.negate();
     }
 }
 
 impl Field for Fq4 {
+    
+    #[inline(always)]
     fn zero() -> Self {
         Fq4 {
             c0: Fq2::zero(),
@@ -40,6 +44,7 @@ impl Field for Fq4 {
         }
     }
 
+    #[inline(always)]
     fn one() -> Self {
         Fq4 {
             c0: Fq2::one(),
@@ -47,30 +52,36 @@ impl Field for Fq4 {
         }
     }
 
+    #[inline(always)]
     fn is_zero(&self) -> bool {
         self.c0.is_zero() && self.c1.is_zero()
     }
 
+    #[inline(always)]
     fn double(&mut self) {
         self.c0.double();
         self.c1.double();
     }
 
+    #[inline(always)]
     fn negate(&mut self) {
         self.c0.negate();
         self.c1.negate();
     }
 
+    #[inline(always)]
     fn add_assign(&mut self, other: &Self) {
         self.c0.add_assign(&other.c0);
         self.c1.add_assign(&other.c1);
     }
 
+    #[inline(always)]
     fn sub_assign(&mut self, other: &Self) {
         self.c0.sub_assign(&other.c0);
         self.c1.sub_assign(&other.c1);
     }
 
+    #[inline(always)]
     fn frobenius_map(&mut self, power: usize) {
         self.c0.frobenius_map(power);
         self.c1.frobenius_map(power);
@@ -79,6 +90,7 @@ impl Field for Fq4 {
         self.c1.c1.mul_assign(&FROBENIUS_COEFF_FQ4_C1[power % 4]);
     }
 
+    #[inline(always)]
     fn square(&mut self) {
         let mut ab = self.c0;
         ab.mul_assign(&self.c1);
@@ -96,6 +108,7 @@ impl Field for Fq4 {
         self.c0 = c0;
     }
 
+    #[inline(always)]
     fn mul_assign(&mut self, other: &Self) {
         let mut aa = self.c0;
         aa.mul_assign(&other.c0);
@@ -112,6 +125,7 @@ impl Field for Fq4 {
         self.c0.add_assign(&aa);
     }
 
+    #[inline(always)]
     fn inverse(&self) -> Option<Self> {
         let mut c0s = self.c0;
         c0s.square();

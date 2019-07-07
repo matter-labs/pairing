@@ -38,6 +38,7 @@ impl PartialOrd for Fq2 {
 
 impl Fq2 {
     /// Multiply this element by the cubic and quadratic nonresidue 1 + u.
+    #[inline(always)]
     pub fn mul_by_nonresidue(&mut self) {
         let t0 = self.c0;
         self.c0.sub_assign(&self.c1);
@@ -45,6 +46,7 @@ impl Fq2 {
     }
 
     /// Norm of Fq2 as extension field in i over Fq
+    #[inline(always)]
     pub fn norm(&self) -> Fq {
         let mut t0 = self.c0;
         let mut t1 = self.c1;
@@ -66,6 +68,7 @@ impl Rand for Fq2 {
 }
 
 impl Field for Fq2 {
+    #[inline(always)]
     fn zero() -> Self {
         Fq2 {
             c0: Fq::zero(),
@@ -73,6 +76,7 @@ impl Field for Fq2 {
         }
     }
 
+    #[inline(always)]
     fn one() -> Self {
         Fq2 {
             c0: Fq::one(),
@@ -80,10 +84,12 @@ impl Field for Fq2 {
         }
     }
 
+    #[inline(always)]
     fn is_zero(&self) -> bool {
         self.c0.is_zero() && self.c1.is_zero()
     }
 
+    #[inline(always)]
     fn square(&mut self) {
         let mut ab = self.c0;
         ab.mul_assign(&self.c1);
@@ -100,26 +106,31 @@ impl Field for Fq2 {
         self.c0 = c0;
     }
 
+    #[inline(always)]
     fn double(&mut self) {
         self.c0.double();
         self.c1.double();
     }
 
+    #[inline(always)]
     fn negate(&mut self) {
         self.c0.negate();
         self.c1.negate();
     }
 
+    #[inline(always)]
     fn add_assign(&mut self, other: &Self) {
         self.c0.add_assign(&other.c0);
         self.c1.add_assign(&other.c1);
     }
 
+    #[inline(always)]
     fn sub_assign(&mut self, other: &Self) {
         self.c0.sub_assign(&other.c0);
         self.c1.sub_assign(&other.c1);
     }
 
+    #[inline(always)]
     fn mul_assign(&mut self, other: &Self) {
         let mut aa = self.c0;
         aa.mul_assign(&other.c0);
@@ -135,6 +146,7 @@ impl Field for Fq2 {
         self.c0.sub_assign(&bb);
     }
 
+    #[inline(always)]
     fn inverse(&self) -> Option<Self> {
         let mut t1 = self.c1;
         t1.square();
@@ -154,16 +166,20 @@ impl Field for Fq2 {
         })
     }
 
+    #[inline(always)]
     fn frobenius_map(&mut self, power: usize) {
         self.c1.mul_assign(&FROBENIUS_COEFF_FQ2_C1[power % 2]);
     }
 }
 
 impl SqrtField for Fq2 {
+
+    #[inline(always)]
     fn legendre(&self) -> ::ff::LegendreSymbol {
         self.norm().legendre()
     }
 
+    #[inline(always)]
     fn sqrt(&self) -> Option<Self> {
         // Algorithm 9, https://eprint.iacr.org/2012/685.pdf
 
