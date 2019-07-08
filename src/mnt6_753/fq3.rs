@@ -46,9 +46,10 @@ impl Fq3 {
 
     #[inline(always)]
     pub fn mul_by_nonresidue(&mut self) {
+        use std::mem::swap;
+        swap(&mut self.c0, &mut self.c1); // (a, b, c) -> (b, a, c)
+        swap(&mut self.c0, &mut self.c2); // (b, a, c) -> (c, a, b)
         self.c0.mul_by_nonresidue();
-        self.c1.mul_by_nonresidue();
-        self.c2.mul_by_nonresidue();
     }
 
     #[inline(always)]
@@ -376,32 +377,6 @@ impl SqrtField for Fq3 {
                 Some(x)
             }
         }
-    }
-}
-
-
-#[test]
-fn test_fq3_mul_nonresidue() {
-
-    use ::rand::{ XorShiftRng, SeedableRng, Rand };
-    use super::fq::{ NON_RESIDUE };
-
-    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
-
-    let non_residue = NON_RESIDUE;
-    let nqr = Fq3 {
-        c0: non_residue,
-        c1: Fq::zero(),
-        c2: Fq::zero(),
-    };
-
-    for _ in 0..1000 {
-        let mut a = Fq3::rand(&mut rng);
-        let mut b = a;
-        a.mul_by_nonresidue();
-        b.mul_assign(&nqr);
-
-        assert_eq!(a, b);
     }
 }
 
