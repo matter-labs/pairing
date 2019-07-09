@@ -93,25 +93,27 @@ impl Field for Fq2 {
 
     #[inline(always)]
     fn square(&mut self) {
-         // v0 = c0 - c1
+        // v0 = c0 - c1
         let mut v0 = self.c0;
         v0.sub_assign(&self.c1);
         // v3 = c0 - beta * c1
-        let mut v3 = self.c0;
-        let mut t0 = self.c0;
-        t0.mul_assign(&NON_RESIDUE);
-        v3.sub_assign(&t0);
+        let mut v3 = self.c1;
+        v3.mul_assign(&NON_RESIDUE);
+        v3.negate();
+        v3.add_assign(&self.c0); 
         // v2 = c0 * c1
         let mut v2 = self.c0;
         v2.mul_assign(&self.c1);
         // v0 = (v0 * v3) + v2
         v0.mul_assign(&v3);
         v0.add_assign(&v2);
+        // res.c0 = v2 * nr + v
+        self.c0 = v2;
+        self.c0.mul_assign(&NON_RESIDUE);
+        self.c0.sub_assign(&v0);
+        // res.c1 = 2*v2
         self.c1 = v2;
         self.c1.double();
-        self.c0 = v0;
-        v2.mul_assign(&NON_RESIDUE);
-        self.c0.add_assign(&v2);
     }
 
     #[inline(always)]
