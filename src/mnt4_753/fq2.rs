@@ -105,7 +105,7 @@ impl Field for Fq2 {
         self.c1.double();
         self.c0 = aa;
         bb.mul_assign(&NON_RESIDUE);
-        self.c0.sub_assign(&bb);
+        self.c0.add_assign(&bb);
     }
 
     #[inline(always)]
@@ -146,7 +146,7 @@ impl Field for Fq2 {
         self.c1.sub_assign(&bb);
         self.c0 = aa;
         bb.mul_assign(&NON_RESIDUE);
-        self.c0.sub_assign(&bb);
+        self.c0.add_assign(&bb);
     }
 
     #[inline(always)]
