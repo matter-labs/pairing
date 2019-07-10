@@ -92,20 +92,19 @@ impl Field for Fq4 {
 
     #[inline(always)]
     fn square(&mut self) {
-        let mut ab = self.c0;
-        ab.mul_assign(&self.c1);
-        let mut c0c1 = self.c0;
-        c0c1.add_assign(&self.c1);
-        let mut c0 = self.c1;
-        c0.mul_by_nonresidue();
-        c0.add_assign(&self.c0);
-        c0.mul_assign(&c0c1);
-        c0.sub_assign(&ab);
-        self.c1 = ab;
-        self.c1.add_assign(&ab);
-        ab.mul_by_nonresidue();
-        c0.sub_assign(&ab);
-        self.c0 = c0;
+        // Devegili OhEig Scott Dahab
+        // --- 
+        // Multiplication and Squaring on Pairing-Friendly Fields.pdf; 
+        // Section 3 (Karatsuba squaring)
+        let mut aa = self.c0;
+        aa.square();
+        let mut bb = self.c1;
+        bb.square();
+        self.c1.mul_assign(&self.c0);
+        self.c1.double();
+        self.c0 = aa;
+        bb.mul_by_nonresidue();
+        self.c0.add_assign(&bb);
     }
 
     #[inline(always)]
@@ -120,9 +119,9 @@ impl Field for Fq4 {
         self.c1.mul_assign(&o);
         self.c1.sub_assign(&aa);
         self.c1.sub_assign(&bb);
-        self.c0 = bb;
-        self.c0.mul_by_nonresidue();
-        self.c0.add_assign(&aa);
+        self.c0 = aa;
+        bb.mul_by_nonresidue();
+        self.c0.add_assign(&bb);
     }
 
     #[inline(always)]
@@ -144,9 +143,6 @@ impl Field for Fq4 {
         })
     }
 }
-
-#[cfg(test)]
-// use rand::{SeedableRng, XorShiftRng};
 
 #[test]
 fn fq4_field_tests() {
