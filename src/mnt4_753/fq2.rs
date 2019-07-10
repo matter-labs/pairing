@@ -151,13 +151,12 @@ impl Field for Fq2 {
 
     #[inline(always)]
     fn inverse(&self) -> Option<Self> {
-        let mut t1 = self.c1;
-        t1.square();
         let mut t0 = self.c0;
         t0.square();
-        let mut t1_nr = t1;
-        t1_nr.mul_assign(&NON_RESIDUE);
-        t0.sub_assign(&t1_nr);
+        let mut t1 = self.c1;
+        t1.square();
+        t1.mul_assign(&NON_RESIDUE);
+        t0.sub_assign(&t1);
         t0.inverse().map(|t1| {
             let mut tmp = Fq2 {
                 c0: self.c0,
@@ -269,6 +268,26 @@ fn test_fq2_basics() {
     .is_zero());
 }
 
+#[cfg(test)]
+use rand::{SeedableRng, XorShiftRng};
+
+#[test]
+fn fq2_frobenius_map_test() {
+    let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    for _ in 1..100 {
+        let a = Fq2::rand(&mut rng);
+        let mut b = a;
+        for i in 1..3 {
+            println!("{}", i);
+            let mut c = a;
+            c.frobenius_map(i);
+            b.frobenius_map(1);
+            assert_eq!(b, c);
+        }
+        assert_eq!(a, b);
+    }
+}
+
 #[test]
 fn test_fq2_legendre() {
     use ff::LegendreSymbol::*;
@@ -281,61 +300,6 @@ fn test_fq2_legendre() {
     m1.mul_by_nonresidue();
     assert_eq!(QuadraticNonResidue, m1.legendre());
 }
-
-#[test]
-fn test_fq2_squaring() {
-    use super::fq::FqRepr;
-    use ff::PrimeField;
-
-    let mut a = Fq2 {
-        c0: Fq::one(),
-        c1: Fq::one(),
-    }; // u + 1
-    a.square();
-    assert_eq!(
-        a,
-        Fq2 {
-            c0: Fq::zero(),
-            c1: Fq::from_repr(FqRepr::from(2)).unwrap(),
-        }
-    ); // 2u
-
-    let mut a = Fq2 {
-        c0: Fq::zero(),
-        c1: Fq::one(),
-    }; // u
-    a.square();
-    assert_eq!(a, {
-        let mut neg1 = Fq::one();
-        neg1.negate();
-        Fq2 {
-            c0: neg1,
-            c1: Fq::zero(),
-        }
-    }); // -1
-}
-
-// #[cfg(test)]
-// use rand::{SeedableRng, XorShiftRng};
-
-// #[test]
-// fn test_fq2_mul_nonresidue() {
-//     let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
-
-//     let nqr = Fq2 {
-//         c0: Fq::one(),
-//         c1: Fq::one(),
-//     };
-
-//     for _ in 0..1000 {
-//         let mut a = Fq2::rand(&mut rng);
-//         let mut b = a;
-//         a.mul_by_nonresidue();
-//         b.mul_assign(&nqr);
-
-//         assert_eq!(a, b);
-//     }
-// }
 
 #[test]
 fn fq2_field_tests() {
