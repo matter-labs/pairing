@@ -99,12 +99,8 @@ impl Field for Fq2 {
         aa.square();
         let mut bb = self.c1;
         bb.square();
-        let mut o = self.c0;
-        o.add_assign(&self.c1);
-        self.c1.add_assign(&self.c0);
-        self.c1.mul_assign(&o);
-        self.c1.sub_assign(&aa);
-        self.c1.sub_assign(&bb);
+        self.c1.mul_assign(&self.c0);
+        self.c1.double();
         self.c0 = aa;
         bb.mul_assign(&NON_RESIDUE);
         self.c0.sub_assign(&bb);
