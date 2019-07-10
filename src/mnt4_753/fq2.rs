@@ -91,10 +91,12 @@ impl Field for Fq2 {
         self.c0.is_zero() && self.c1.is_zero()
     }
 
-    // This the actually the same as self * self
-    // TODO: Implements and debug the actual algorithm
     #[inline(always)]
     fn square(&mut self) {
+        // Devegili OhEig Scott Dahab
+        // --- 
+        // Multiplication and Squaring on Pairing-Friendly Fields.pdf; 
+        // Section 3 (Karatsuba squaring)
         let mut aa = self.c0;
         aa.square();
         let mut bb = self.c1;
