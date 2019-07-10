@@ -56,7 +56,7 @@ impl Fq2 {
         t1.square();
         t1.mul_assign(&NON_RESIDUE);
         t0.sub_assign(&t1);
-        t1
+        t0
     }
 }
 
