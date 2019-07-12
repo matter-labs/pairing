@@ -1173,6 +1173,14 @@ pub mod g1 {
         );
     }
 
+    #[cfg(test)]
+    use tests::curve::{curve_tests};
+
+    #[test]
+    fn test_curve_g1() {
+        curve_tests::<G1>();
+    }
+
 }
 
 pub mod g2 {
@@ -1547,119 +1555,126 @@ pub mod g2 {
             x.add_assign(&Fq2::one());
         }
     }
-    /*
-        #[test]
-        fn test_g2_addition_correctness() {
-            let mut p = G2 {
-                x: Fq2 {
-                    c0: Fq::from_repr(FqRepr([
-                    ]))
-                    .unwrap(),
-                    c1: Fq::from_repr(FqRepr([
-                    ]))
-                    .unwrap(),
-                },
-                y: Fq2 {
-                    c0: Fq::from_repr(FqRepr([
-                    ]))
-                    .unwrap(),
-                    c1: Fq::from_repr(FqRepr([
-                    ]))
-                    .unwrap(),
-                },
-                z: Fq2::one(),
-            };
-            p.add_assign(&G2 {
-                x: Fq2 {
-                    c0: Fq::from_repr(FqRepr([
-                    ]))
-                    .unwrap(),
-                    c1: Fq::from_repr(FqRepr([
-                    ]))
-                    .unwrap(),
-                },
-                y: Fq2 {
-                    c0: Fq::from_repr(FqRepr([
-                    ]))
-                    .unwrap(),
-                    c1: Fq::from_repr(FqRepr([
-                    ]))
-                    .unwrap(),
-                },
-                z: Fq2::one(),
-            });
-            let p = G2Affine::from(p);
-            assert_eq!(
-                p,
-                G2Affine {
-                    x: Fq2 {
-                        c0: Fq::from_repr(FqRepr([
-                        ]))
-                        .unwrap(),
-                        c1: Fq::from_repr(FqRepr([
-                        ]))
-                        .unwrap(),
-                    },
-                    y: Fq2 {
-                        c0: Fq::from_repr(FqRepr([
-                        ]))
-                        .unwrap(),
-                        c1: Fq::from_repr(FqRepr([
-                        ]))
-                        .unwrap(),
-                    },
-                    infinity: false,
-                }
-            );
-        }
 
-        #[test]
-        fn test_g2_doubling_correctness() {
-            let mut p = G2 {
-                x: Fq2 {
-                    c0: Fq::from_repr(FqRepr([
-                    ]))
-                    .unwrap(),
-                    c1: Fq::from_repr(FqRepr([
-                    ]))
-                    .unwrap(),
-                },
-                y: Fq2 {
-                    c0: Fq::from_repr(FqRepr([
-                    ]))
-                    .unwrap(),
-                    c1: Fq::from_repr(FqRepr([
-                    ]))
-                    .unwrap(),
-                },
-                z: Fq2::one(),
-            };
-            p.double();
-            let p = G2Affine::from(p);
-            assert_eq!(
-                p,
-                G2Affine {
-                    x: Fq2 {
-                        c0: Fq::from_repr(FqRepr([
-                        ]))
-                        .unwrap(),
-                        c1: Fq::from_repr(FqRepr([
-                        ]))
-                        .unwrap(),
-                    },
-                    y: Fq2 {
-                        c0: Fq::from_repr(FqRepr([
-                        ]))
-                        .unwrap(),
-                        c1: Fq::from_repr(FqRepr([
-                        ]))
-                        .unwrap(),
-                    },
-                    infinity: false,
-                }
-            );
-        }
-    */
+    #[cfg(test)]
+    use tests::curve::{curve_tests};
+
+    #[test]
+    fn test_curve_g2() {
+        curve_tests::<G2>();
+    }
+
+    // #[test]
+    // fn test_g2_addition_correctness() {
+    //     let mut p = G2 {
+    //         x: Fq2 {
+    //             c0: Fq::from_repr(FqRepr([
+    //             ]))
+    //             .unwrap(),
+    //             c1: Fq::from_repr(FqRepr([
+    //             ]))
+    //             .unwrap(),
+    //         },
+    //         y: Fq2 {
+    //             c0: Fq::from_repr(FqRepr([
+    //             ]))
+    //             .unwrap(),
+    //             c1: Fq::from_repr(FqRepr([
+    //             ]))
+    //             .unwrap(),
+    //         },
+    //         z: Fq2::one(),
+    //     };
+    //     p.add_assign(&G2 {
+    //         x: Fq2 {
+    //             c0: Fq::from_repr(FqRepr([
+    //             ]))
+    //             .unwrap(),
+    //             c1: Fq::from_repr(FqRepr([
+    //             ]))
+    //             .unwrap(),
+    //         },
+    //         y: Fq2 {
+    //             c0: Fq::from_repr(FqRepr([
+    //             ]))
+    //             .unwrap(),
+    //             c1: Fq::from_repr(FqRepr([
+    //             ]))
+    //             .unwrap(),
+    //         },
+    //         z: Fq2::one(),
+    //     });
+    //     let p = G2Affine::from(p);
+    //     assert_eq!(
+    //         p,
+    //         G2Affine {
+    //             x: Fq2 {
+    //                 c0: Fq::from_repr(FqRepr([
+    //                 ]))
+    //                 .unwrap(),
+    //                 c1: Fq::from_repr(FqRepr([
+    //                 ]))
+    //                 .unwrap(),
+    //             },
+    //             y: Fq2 {
+    //                 c0: Fq::from_repr(FqRepr([
+    //                 ]))
+    //                 .unwrap(),
+    //                 c1: Fq::from_repr(FqRepr([
+    //                 ]))
+    //                 .unwrap(),
+    //             },
+    //             infinity: false,
+    //         }
+    //     );
+    // }
+
+    // #[test]
+    // fn test_g2_doubling_correctness() {
+    //     let mut p = G2 {
+    //         x: Fq2 {
+    //             c0: Fq::from_repr(FqRepr([
+    //             ]))
+    //             .unwrap(),
+    //             c1: Fq::from_repr(FqRepr([
+    //             ]))
+    //             .unwrap(),
+    //         },
+    //         y: Fq2 {
+    //             c0: Fq::from_repr(FqRepr([
+    //             ]))
+    //             .unwrap(),
+    //             c1: Fq::from_repr(FqRepr([
+    //             ]))
+    //             .unwrap(),
+    //         },
+    //         z: Fq2::one(),
+    //     };
+    //     p.double();
+    //     let p = G2Affine::from(p);
+    //     assert_eq!(
+    //         p,
+    //         G2Affine {
+    //             x: Fq2 {
+    //                 c0: Fq::from_repr(FqRepr([
+    //                 ]))
+    //                 .unwrap(),
+    //                 c1: Fq::from_repr(FqRepr([
+    //                 ]))
+    //                 .unwrap(),
+    //             },
+    //             y: Fq2 {
+    //                 c0: Fq::from_repr(FqRepr([
+    //                 ]))
+    //                 .unwrap(),
+    //                 c1: Fq::from_repr(FqRepr([
+    //                 ]))
+    //                 .unwrap(),
+    //             },
+    //             infinity: false,
+    //         }
+    //     );
+    // }
 }
 pub use self::g1::*;
 pub use self::g2::*;
