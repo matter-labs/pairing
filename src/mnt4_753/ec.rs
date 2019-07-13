@@ -680,7 +680,7 @@ pub mod g1 {
     );
 
     #[derive(Copy, Clone)]
-    pub struct G1Uncompressed([u8; 96]);
+    pub struct G1Uncompressed([u8; 192]);
 
     impl AsRef<[u8]> for G1Uncompressed {
         fn as_ref(&self) -> &[u8] {
@@ -704,10 +704,10 @@ pub mod g1 {
         type Affine = G1Affine;
 
         fn empty() -> Self {
-            G1Uncompressed([0; 96])
+            G1Uncompressed([0; 192])
         }
         fn size() -> usize {
-            96
+            192
         }
         fn into_affine(&self) -> Result<G1Affine, GroupDecodingError> {
             let affine = self.into_affine_unchecked()?;
@@ -790,7 +790,7 @@ pub mod g1 {
     }
 
     #[derive(Copy, Clone)]
-    pub struct G1Compressed([u8; 48]);
+    pub struct G1Compressed([u8; 96]);
 
     impl AsRef<[u8]> for G1Compressed {
         fn as_ref(&self) -> &[u8] {
@@ -814,10 +814,10 @@ pub mod g1 {
         type Affine = G1Affine;
 
         fn empty() -> Self {
-            G1Compressed([0; 48])
+            G1Compressed([0; 96])
         }
         fn size() -> usize {
-            48
+            96
         }
         fn into_affine(&self) -> Result<G1Affine, GroupDecodingError> {
             let affine = self.into_affine_unchecked()?;
