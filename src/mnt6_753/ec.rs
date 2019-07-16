@@ -979,6 +979,14 @@ pub mod g1 {
         }
     }
 
+    #[cfg(test)]
+    use tests::curve::{curve_tests};
+
+    #[test]
+    fn test_curve_g1() {
+        curve_tests::<G1>();
+    }
+
     #[test]
     fn test_g1_addition_correctness() {
         let mut p = G1 {
@@ -1637,6 +1645,44 @@ pub mod g2 {
             }
             x.add_assign(&Fq3::one());
         }
+    }
+
+    #[cfg(test)]
+    use tests::curve::{curve_tests};
+
+    // Why does it fail ?
+    #[test]
+    fn g2_generator_on_curve() {
+        use SqrtField;
+
+        let gen = G2Affine::get_generator();
+        let x = gen.x;
+        // y^2 = x^3 + 3/xi
+        let mut rhs = x;
+        rhs.square();
+        rhs.mul_assign(&x);
+        rhs.add_assign(&G2Affine::get_coeff_b());
+
+        if let Some(y) = rhs.sqrt() {
+            let mut negy = y;
+            negy.negate();
+
+            let p = G2Affine {
+                x: x,
+                y: if y < negy { y } else { negy },
+                infinity: false,
+            };
+
+            assert_eq!(p.y, gen.y);
+            assert_eq!(p, G2Affine::one());
+            return;
+        }
+        panic!();
+    }
+
+    #[test]
+    fn test_curve_g2() {
+        curve_tests::<G2>();
     }
 
     /*
