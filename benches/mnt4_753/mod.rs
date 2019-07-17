@@ -1,6 +1,6 @@
 mod ec;
 mod fq;
-mod fq12;
+mod fq4;
 mod fq2;
 mod fr;
 
