@@ -384,9 +384,9 @@ impl SqrtField for Fq3 {
 fn fq3_field_tests() {
     use ff::PrimeField;
 
-    ::tests::field::random_field_tests::<Fq3>();
-    ::tests::field::random_sqrt_tests::<Fq3>();
-    ::tests::field::random_frobenius_tests::<Fq3, _>(super::fq::Fq::char(), 13);
+    crate::tests::field::random_field_tests::<Fq3>();
+    crate::tests::field::random_sqrt_tests::<Fq3>();
+    crate::tests::field::random_frobenius_tests::<Fq3, _>(super::fq::Fq::char(), 13);
 }
 
 

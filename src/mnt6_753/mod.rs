@@ -360,5 +360,5 @@ impl G2Prepared {
 
 #[test]
 fn mnt6_engine_tests() {
-    ::tests::engine::engine_tests::<Mnt6>();
+    crate::tests::engine::engine_tests::<Mnt6>();
 }

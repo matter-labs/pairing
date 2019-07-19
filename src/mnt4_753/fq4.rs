@@ -148,6 +148,6 @@ impl Field for Fq4 {
 fn fq4_field_tests() {
     use ff::PrimeField;
 
-    ::tests::field::random_field_tests::<Fq4>();
-    ::tests::field::random_frobenius_tests::<Fq4, _>(super::fq::Fq::char(), 13);
+    crate::tests::field::random_field_tests::<Fq4>();
+    crate::tests::field::random_frobenius_tests::<Fq4, _>(super::fq::Fq::char(), 13);
 }

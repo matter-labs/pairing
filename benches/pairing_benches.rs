@@ -1,6 +1,6 @@
 #![feature(test)]
 
-extern crate ff_ce;
+extern crate ff;
 extern crate pairing_ce;
 extern crate rand;
 extern crate test;
