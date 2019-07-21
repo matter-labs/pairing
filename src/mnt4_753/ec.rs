@@ -1610,12 +1610,10 @@ pub mod g2 {
         loop {
             // y^2 = x^3 + ax + b
             let mut rhs = x;
-            let mut ax = x;
-            rhs.square(); // x^2
-            rhs.mul_assign(&x); // x^3
-            ax.mul_assign(&G2Affine::get_coeff_a()); // ax
-            rhs.add_assign(&ax); // x^3 + ax
-            rhs.add_assign(&G2Affine::get_coeff_b()); // x^3 + ax + b
+            rhs.square(); // x²
+            rhs.add_assign(&G2Affine::get_coeff_a()); // x² + a
+            rhs.mul_assign(&x); // x³ + ax
+            rhs.add_assign(&G2Affine::get_coeff_b()); // x³ + ax + b
             if let Some(y) = rhs.sqrt() {
                 let mut negy = y;
                 negy.negate();
@@ -1631,34 +1629,21 @@ pub mod g2 {
         }
     }
 
-    // Why does it fail ?
     #[test]
     fn g2_generator_on_curve() {
-        use SqrtField;
 
         let gen = G2Affine::get_generator();
-        let x = gen.x;
-        // y^2 = x^3 + 3/xi
-        let mut rhs = x;
+
+        let mut lhs = gen.y;
+        lhs.square();
+
+        let mut rhs = gen.x;
         rhs.square();
-        rhs.mul_assign(&x);
+        rhs.add_assign(&G2Affine::get_coeff_a());
+        rhs.mul_assign(&gen.x);
         rhs.add_assign(&G2Affine::get_coeff_b());
 
-        if let Some(y) = rhs.sqrt() {
-            let mut negy = y;
-            negy.negate();
-
-            let p = G2Affine {
-                x: x,
-                y: if y < negy { y } else { negy },
-                infinity: false,
-            };
-
-            assert_eq!(p.y, gen.y);
-            assert_eq!(p, G2Affine::one());
-            return;
-        }
-        panic!();
+        assert_eq!(lhs, rhs);
     }
 
     #[test]
