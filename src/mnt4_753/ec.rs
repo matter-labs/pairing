@@ -1553,9 +1553,10 @@ pub mod g2 {
         }
 
         fn scale_by_cofactor(&self) -> G2 {
-            // G2 cofactor = 1
-            // just return as G2 ($projective) element
-            self.into_projective()
+            // Multiply by G2_cofactor and return the projective associated point
+            let mut projective = self.into_projective();
+            projective.mul_assign(super::super::fr::G2_COFACTOR);
+            projective
         }
 
         fn perform_pairing(&self, other: &G1Affine) -> Fq4 {
@@ -1603,6 +1604,9 @@ pub mod g2 {
         pub(crate) infinity: bool,
     }
 
+    #[cfg(test)]
+    use rand::{SeedableRng, XorShiftRng};
+
     #[test]
     fn g2_generator() {
         use SqrtField;
@@ -1631,7 +1635,6 @@ pub mod g2 {
 
     #[test]
     fn g2_generator_on_curve() {
-
         let gen = G2Affine::get_generator();
 
         let mut lhs = gen.y;
@@ -1644,6 +1647,21 @@ pub mod g2 {
         rhs.add_assign(&G2Affine::get_coeff_b());
 
         assert_eq!(lhs, rhs);
+
+        // Test that generator belongs to the subgroup of order r
+        let mut gen_proj = gen.into_projective();
+        gen_proj.mul_assign(Fr::char());
+        assert!(gen_proj.is_zero());
+    }
+
+    #[test]
+    fn g2_cofactor() {
+        let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+        for _ in 1..1000 {
+            let mut g = G2::rand(&mut rng);
+            g.mul_assign(Fr::char());
+            assert!(g.is_zero());
+        }
     }
 
     #[test]
