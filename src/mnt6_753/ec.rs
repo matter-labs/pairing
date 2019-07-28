@@ -1624,18 +1624,11 @@ pub mod g2 {
 
         fn scale_by_cofactor(&self) -> G2 {
             // Multiply by G2_cofactor and return the projective associated point
-            let projective = self.into_projective();
-            let mut cx = projective;
-            cx.mul_assign(super::super::fr::G2_COFACTOR_C);    
-            let mut brx = projective;
-            brx.mul_assign(super::super::fr::R_MINUS_1); // rx
-            let mut arrx = brx; // rx
-            brx.mul_assign(super::super::fr::G2_COFACTOR_B); //brx
-            arrx.mul_assign(super::super::fr::R_MINUS_1); // rrx
-            arrx.mul_assign(super::super::fr::G2_COFACTOR_A); //arrx
-            arrx.add_assign(&brx); //arrx + brx
-            arrx.add_assign(&cx); // arrx + brx + cx
-            arrx
+            let mut projective = self.into_projective();
+            projective.mul_assign(super::super::fr::G2_COFACTOR_A);
+            projective.mul_assign(super::super::fr::G2_COFACTOR_B);
+            projective.mul_assign(super::super::fr::G2_COFACTOR_C);    
+            projective
         }
 
         fn perform_pairing(&self, other: &G1Affine) -> Fq6 {
@@ -1735,7 +1728,7 @@ pub mod g2 {
     #[test]
     fn g2_cofactor() {
         let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
-        for _ in 1..1 {
+        for _ in 1..1000 {
             let mut g = G2::rand(&mut rng);
             g.mul_assign(Fr::char());
             assert!(g.is_zero());
