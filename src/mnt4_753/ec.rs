@@ -1255,6 +1255,7 @@ pub mod g1 {
     #[test]
     fn test_curve_g1() {
         crate::tests::curve::curve_tests::<G1>();
+        crate::tests::curve::random_transformation_tests::<G1>();
     }
 
 }
@@ -1667,6 +1668,7 @@ pub mod g2 {
     #[test]
     fn test_curve_g2() {
         crate::tests::curve::curve_tests::<G2>();
+        crate::tests::curve::random_transformation_tests::<G2>();
     }
 
     // #[test]
