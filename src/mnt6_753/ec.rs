@@ -1625,9 +1625,12 @@ pub mod g2 {
         fn scale_by_cofactor(&self) -> G2 {
             // Multiply by G2_cofactor and return the projective associated point
             let mut projective = self.into_projective();
-            projective.mul_assign(super::super::fr::G2_COFACTOR_A);
+            let mut cx = projective;
+            cx.mul_assign(super::super::fr::G2_COFACTOR_C);
+            projective.mul_assign(super::super::fr::MINUS_ONE);
             projective.mul_assign(super::super::fr::G2_COFACTOR_B);
-            projective.mul_assign(super::super::fr::G2_COFACTOR_C);    
+            projective.add_assign(&cx);
+            projective.mul_assign(super::super::fr::G2_COFACTOR_A);
             projective
         }
 
@@ -1728,9 +1731,11 @@ pub mod g2 {
     #[test]
     fn g2_cofactor() {
         let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
-        for _ in 1..1000 {
+        for _ in 0..1000 {
             let mut g = G2::rand(&mut rng);
             g.mul_assign(Fr::char());
+            let factor = Fr::from_str("67").expect("OK");
+            g.mul_assign(factor); 
             assert!(g.is_zero());
         }
     }

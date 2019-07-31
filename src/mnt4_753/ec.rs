@@ -1657,7 +1657,7 @@ pub mod g2 {
     #[test]
     fn g2_cofactor() {
         let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
-        for _ in 1..1000 {
+        for _ in 0..1000 {
             let mut g = G2::rand(&mut rng);
             g.mul_assign(Fr::char());
             assert!(g.is_zero());
