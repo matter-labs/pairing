@@ -85,6 +85,30 @@ macro_rules! curve_impl {
         }
 
         impl $affine {
+
+            /// Create affine from x,y coordinates, returns None if the point is not on the curve.
+            /// Use [zero()] instead this function if the point is at infinity.
+            pub fn try_from_coordinates(x: $basefield, y: $basefield) -> Option<$affine> {
+                let affine = $affine {
+                    x, y,
+                    infinity : false,
+                };
+                if affine.is_on_curve() {
+                    Some(affine)
+                } else {
+                    None
+                }
+            }
+
+            /// Returns the x,y coordinates for this affine iff is not at infinity, None if is at infinty.
+            pub fn try_to_coordinates(&self) -> Option<($basefield,$basefield)> {
+                if self.is_zero() {
+                    None
+                } else {
+                    Some((self.x.clone(),self.y.clone()))
+                }
+            }
+
             fn mul_bits<S: AsRef<[u64]>>(&self, bits: BitIterator<S>) -> $projective {
                 let mut res = $projective::zero();
                 for i in bits {
