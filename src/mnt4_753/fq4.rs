@@ -1,8 +1,17 @@
-use super::fq::{FROBENIUS_COEFF_FQ4_C1};
-use super::fq2::Fq2;
-use ff::Field;
-use rand::{Rand, Rng};
-// use ff::LegendreSymbol::{ QuadraticNonResidue, QuadraticResidue, Zero };
+extern crate std;
+
+use super::{
+    fq::{FROBENIUS_COEFF_FQ4_C1},
+    fq2::Fq2,
+};
+
+use crate::{
+    BitIterator,
+    rand::{Rand, Rng},
+    ff::Field,
+};
+
+use std::mem::swap;
 
 /// An element of Fq4, represented by c0 + c1 * w.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -31,6 +40,64 @@ impl Fq4 {
     #[inline(always)]
     pub fn conjugate(&mut self) {
         self.c1.negate();
+    }
+
+    // When the Fq4 element is known to be an r-th root of 
+    // unity, we can use this function instead of squaring
+    // TODO: Implement NAF
+    #[inline(always)]
+    pub fn cyclotomic_exp<S: AsRef<[u64]>>(&mut self, exp: S) -> Self {
+        let mut res = Self::one();
+        let mut found_one = false;
+
+        for i in BitIterator::new(exp) {
+            if found_one {
+                res.cyclotomic_square();
+            } else {
+                found_one = i;
+            }
+
+            if i {
+                res.mul_assign(self);
+            }
+        }
+
+        res
+    }
+
+    // When the Fq4 element is known to be an r-th root of 
+    // unity, we can use this function instead of squaring
+    #[inline(always)]
+    pub fn cyclotomic_square(&mut self) {
+        swap(&mut self.c0, &mut self.c1);
+        self.c1.add_assign(&self.c0);
+        self.c1.square();
+        self.c0.square();
+        self.c1.sub_assign(&self.c0);
+        self.c0.mul_by_nonresidue();
+        self.c1.sub_assign(&self.c0);
+        self.c0.double();
+        let one = Fq2::one();
+        self.c0.add_assign(&one);
+        self.c1.sub_assign(&one);
+    }
+
+    pub fn mul_by_023(&mut self, other: &Self) {
+        /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba) */
+        let mut aa = self.c0;
+        aa.c0.mul_assign(&other.c0.c0);
+        aa.c1.mul_assign(&other.c0.c0);
+        let mut bb = self.c1;
+        bb.mul_assign(&other.c1);
+        let mut o = other.c0;
+        o.add_assign(&other.c1);
+        self.c1.add_assign(&self.c0);
+        self.c1.mul_assign(&o);
+        self.c1.sub_assign(&aa);
+        self.c1.sub_assign(&bb);
+        self.c0 = aa;
+        bb.mul_by_nonresidue();
+        self.c0.add_assign(&bb);
     }
 }
 
