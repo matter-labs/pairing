@@ -46,7 +46,7 @@ impl Fq4 {
     // unity, we can use this function instead of squaring
     // TODO: Implement NAF
     #[inline(always)]
-    pub fn cyclotomic_exp<S: AsRef<[u64]>>(&mut self, exp: S) -> Self {
+    pub fn cyclotomic_exp<S: AsRef<[u64]>>(&self, exp: S) -> Self {
         let mut res = Self::one();
         let mut found_one = false;
 
@@ -82,6 +82,7 @@ impl Fq4 {
         self.c1.sub_assign(&one);
     }
 
+    #[inline(always)]
     pub fn mul_by_023(&mut self, other: &Self) {
         /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba) */
         let mut aa = self.c0;

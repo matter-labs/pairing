@@ -49,6 +49,13 @@ impl Fq2 {
 
     /// Norm of Fq2 as extension field in i over Fq
     #[inline(always)]
+    pub fn mul_assign_by_fp(&mut self, f: &Fq) {
+        self.c0.mul_assign(f);
+        self.c1.mul_assign(f);
+    }
+
+    /// Norm of Fq2 as extension field in i over Fq
+    #[inline(always)]
     pub fn norm(&self) -> Fq {
         let mut t0 = self.c0;
         t0.square();
