@@ -1602,8 +1602,6 @@ pub mod g2 {
         pub addition_coefficients: Vec<AteAdditionCoefficients>,
     }
 
-    #[cfg(test)]
-    use rand::{SeedableRng, XorShiftRng};
 
     pub struct G2ProjectiveExtended {
         pub x: Fq2,
@@ -1625,6 +1623,9 @@ pub mod g2 {
         pub c_l1: Fq2,
         pub c_rz: Fq2,
     }
+    
+    #[cfg(test)]
+    use rand::{SeedableRng, XorShiftRng};
 
     #[test]
     fn g2_generator() {

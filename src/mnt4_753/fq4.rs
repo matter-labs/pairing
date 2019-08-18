@@ -81,25 +81,6 @@ impl Fq4 {
         self.c0.add_assign(&one);
         self.c1.sub_assign(&one);
     }
-
-    #[inline(always)]
-    pub fn mul_by_023(&mut self, other: &Self) {
-        /* Devegili OhEig Scott Dahab --- Multiplication and Squaring on Pairing-Friendly Fields.pdf; Section 3 (Karatsuba) */
-        let mut aa = self.c0;
-        aa.c0.mul_assign(&other.c0.c0);
-        aa.c1.mul_assign(&other.c0.c0);
-        let mut bb = self.c1;
-        bb.mul_assign(&other.c1);
-        let mut o = other.c0;
-        o.add_assign(&other.c1);
-        self.c1.add_assign(&self.c0);
-        self.c1.mul_assign(&o);
-        self.c1.sub_assign(&aa);
-        self.c1.sub_assign(&bb);
-        self.c0 = aa;
-        bb.mul_by_nonresidue();
-        self.c0.add_assign(&bb);
-    }
 }
 
 impl Field for Fq4 {
