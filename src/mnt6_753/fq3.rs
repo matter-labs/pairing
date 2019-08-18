@@ -53,7 +53,7 @@ impl Fq3 {
     }
 
     #[inline(always)]
-    pub fn mul_by_fp(&mut self, other: &Fq) {
+    pub fn mul_assign_by_fp(&mut self, other: &Fq) {
         self.c0.mul_assign(&other);
         self.c1.mul_assign(&other);
         self.c2.mul_assign(&other);

@@ -1,7 +1,13 @@
-use super::fq::{FROBENIUS_COEFF_FQ6_C1};
-use super::fq3::Fq3;
-use ff::Field;
-use rand::{Rand, Rng};
+use super::{
+    fq::{FROBENIUS_COEFF_FQ6_C1},
+    fq3::Fq3,
+};
+
+use crate::{
+    BitIterator,
+    rand::{Rand, Rng},
+    ff::Field,
+};
 
 /// An element of Fq6, represented by c0 + c1 * w.
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -29,6 +35,26 @@ impl Fq6 {
     #[inline(always)]
     pub fn conjugate(&mut self) {
         self.c1.negate();
+    }
+
+    #[inline(always)]
+    pub fn cyclotomic_exp<S: AsRef<[u64]>>(&self, exp: S) -> Self {
+        let mut res = Self::one();
+        let mut found_one = false;
+
+        for i in BitIterator::new(exp) {
+            if found_one {
+                res.square();
+            } else {
+                found_one = i;
+            }
+
+            if i {
+                res.mul_assign(self);
+            }
+        }
+
+        res
     }
 }
 
@@ -83,7 +109,7 @@ impl Field for Fq6 {
         self.c0.frobenius_map(power);
         self.c1.frobenius_map(power);
 
-        self.c1.mul_by_fp(&FROBENIUS_COEFF_FQ6_C1[power % 6]);
+        self.c1.mul_assign_by_fp(&FROBENIUS_COEFF_FQ6_C1[power % 6]);
     }
 
     #[inline(always)]

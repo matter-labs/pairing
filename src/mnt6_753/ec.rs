@@ -630,7 +630,7 @@ macro_rules! curve_impl {
 }
 
 pub mod g1 {
-    use super::super::{Fq, Fq6, FqRepr, Fr, FrRepr, Mnt6};
+    use super::super::{Fq, Fq3, Fq6, FqRepr, Fr, FrRepr, Mnt6};
     use super::g2::G2Affine;
     use ff::{BitIterator, Field, PrimeField, PrimeFieldRepr, SqrtField};
     use crate::{RawEncodable, CurveAffine, CurveProjective, EncodedPoint, GroupDecodingError, Engine};
@@ -989,18 +989,13 @@ pub mod g1 {
         }
     }
 
-    #[derive(Clone, Debug)]
-    pub struct G1Prepared(pub(crate) G1Affine);
-
-    impl G1Prepared {
-        pub fn is_zero(&self) -> bool {
-            self.0.is_zero()
-        }
-
-        pub fn from_affine(p: G1Affine) -> Self {
-            G1Prepared(p)
-        }
+    #[derive(Eq, PartialEq, Copy, Clone, Debug)]
+    pub struct G1Prepared {
+        pub p:       G1Affine,
+        pub x_by_twist: Fq3,
+        pub y_by_twist: Fq3,
     }
+
     #[test]
     fn g1_generator() {
         use SqrtField;
@@ -1615,7 +1610,7 @@ pub mod g2 {
             }
         }
 
-        fn get_coeff_a() -> Fq3 {
+        pub fn get_coeff_a() -> Fq3 {
             super::super::fq::G2_A_COEFF
         }
 
@@ -1641,7 +1636,7 @@ pub mod g2 {
     }
 
     impl G2 {
-        fn get_coeff_a() -> Fq3 {
+        pub fn get_coeff_a() -> Fq3 {
             super::super::fq::G2_A_COEFF
         }
 
@@ -1674,10 +1669,34 @@ pub mod g2 {
         }
     }
 
-    #[derive(Clone, Debug)]
+        #[derive(Eq, PartialEq, Clone, Debug)]
     pub struct G2Prepared {
-        pub(crate) coeffs: Vec<(Fq3, Fq3, Fq3)>,
-        pub(crate) infinity: bool,
+        pub p:                     G2Affine,
+        pub x_over_twist:          Fq3,
+        pub y_over_twist:          Fq3,
+        pub double_coefficients:   Vec<AteDoubleCoefficients>,
+        pub addition_coefficients: Vec<AteAdditionCoefficients>,
+    }
+
+    pub struct G2ProjectiveExtended {
+        pub x: Fq3,
+        pub y: Fq3,
+        pub z: Fq3,
+        pub t: Fq3,
+    }
+
+    #[derive(Eq, PartialEq, Copy, Clone, Debug)]
+    pub struct AteDoubleCoefficients {
+        pub c_h:  Fq3,
+        pub c_4c: Fq3,
+        pub c_j:  Fq3,
+        pub c_l:  Fq3,
+    }
+
+    #[derive(Eq, PartialEq, Copy, Clone, Debug)]
+    pub struct AteAdditionCoefficients {
+        pub c_l1: Fq3,
+        pub c_rz: Fq3,
     }
 
     #[cfg(test)]

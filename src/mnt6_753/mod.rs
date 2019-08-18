@@ -4,10 +4,16 @@ mod fq3;
 mod fq6;
 mod fr;
 
+use self::{
+    ec::g2::{ AteDoubleCoefficients, AteAdditionCoefficients, G2ProjectiveExtended },
+    fq::{ MNT6_X, MNT6_X_IS_NEGATIVE, TWIST_INV, TWIST, EXP_W0, EXP_W1, EXP_W0_IS_NEGATIVE }
+};
+
 pub use self::ec::{
     G1Affine, G1Compressed, G1Prepared, G1Uncompressed, G2Affine, G2Compressed, G2Prepared,
     G2Uncompressed, G1, G2,
 };
+
 pub use self::fq::{Fq, FqRepr};
 pub use self::fq3::Fq3;
 pub use self::fq6::Fq6;
@@ -17,12 +23,137 @@ use super::{Engine, CurveAffine};
 
 use ff::{BitIterator, Field, ScalarEngine};
 
-// The BLS parameter x for BLS12-381 is -0xd201000000010000
-const BLS_X: u64 = 0xd201000000010000;
-const BLS_X_IS_NEGATIVE: bool = true;
-
 #[derive(Clone, Debug)]
 pub struct Mnt6;
+
+impl Mnt6 {
+
+    fn ate_pairing_loop(
+        p: &G1Prepared,
+        q: &G2Prepared,
+    ) -> Fq6 {
+
+        let mut l1_coeff = Fq3::zero();
+        l1_coeff.c0 = p.p.x;
+        l1_coeff.sub_assign(&q.x_over_twist);
+
+        let mut f = Fq6::one();
+
+        let mut dbl_idx: usize = 0;
+        let mut add_idx: usize = 0;
+
+
+        // The for loop is executed for all bits (EXCEPT the MSB itself) of
+        let mut found_one = false;
+        for bit in BitIterator::new(&MNT6_X).skip(1) {
+            if !found_one {
+                found_one = bit;
+                continue;
+            }
+            
+            let dc = &q.double_coefficients[dbl_idx];
+            dbl_idx += 1;
+
+            let mut g_rr_at_p = Fq6::zero();
+
+            let mut t0 = dc.c_j;
+            t0.mul_assign(&p.x_by_twist);
+            t0.negate();
+            t0.add_assign(&dc.c_l);
+            t0.sub_assign(&dc.c_4c);
+
+            let mut t1 = dc.c_h;
+            t1.mul_assign(&p.y_by_twist);
+
+            g_rr_at_p.c0 = t0;
+            g_rr_at_p.c1 = t1;
+
+            f.square();
+            f.mul_assign(&g_rr_at_p);
+
+            if bit {
+                let ac = &q.addition_coefficients[add_idx];
+                add_idx += 1;
+
+                let mut g_rq_at_p = Fq6::zero();
+
+                let mut t0 = ac.c_rz;
+                t0.mul_assign(&p.y_by_twist);
+
+                let mut t = l1_coeff;
+                t.mul_assign(&ac.c_l1);
+
+                let mut t1 = q.y_over_twist;
+                t1.mul_assign(&ac.c_rz);
+                t1.add_assign(&t);
+                t1.negate();
+
+                g_rq_at_p.c0 = t0;
+                g_rq_at_p.c1 = t1;
+
+                f.mul_assign(&g_rq_at_p);
+            }
+        }
+
+        if MNT6_X_IS_NEGATIVE {
+            let ac = &q.addition_coefficients[add_idx];
+
+            let mut g_rnegr_at_p = Fq6::zero();
+
+            let mut t0 = ac.c_rz;
+            t0.mul_assign(&p.y_by_twist);
+
+            let mut t = l1_coeff;
+            t.mul_assign(&ac.c_l1);
+
+            let mut t1 = q.y_over_twist;
+            t1.mul_assign(&ac.c_rz);
+            t1.add_assign(&t);
+            t1.negate();
+
+            g_rnegr_at_p.c0 = t0;
+            g_rnegr_at_p.c1 = t1;
+
+            f.mul_assign(&g_rnegr_at_p);
+            f = f.inverse().expect("It should not throw");
+        }
+
+        f
+    }
+
+    fn final_exponentiation_part_one(elt: &Fq6, elt_inv: &Fq6) -> Fq6 {
+        // (q^3-1)*(q+1)
+
+        // elt_q3 = elt^(q^3)
+        let mut elt_q3 = elt.clone();
+        elt_q3.frobenius_map(3);
+        // elt_q3_over_elt = elt^(q^3-1)
+        let mut elt_q3_over_elt = elt_q3;
+        elt_q3_over_elt.mul_assign(&elt_inv);
+        // alpha = elt^((q^3-1) * q)
+        let mut alpha = elt_q3_over_elt.clone();
+        alpha.frobenius_map(1);
+        // beta = elt^((q^3-1)*(q+1)
+        alpha.mul_assign(&elt_q3_over_elt);
+
+        alpha
+    }
+
+    fn final_exponentiation_part_two(elt: &Fq6, &elt_inv: &Fq6) -> Fq6 {
+        let mut elt_q = elt.clone();
+        elt_q.frobenius_map(1);
+
+        let mut w1_part = elt_q.clone().cyclotomic_exp(&EXP_W1);
+        let w0_part = match EXP_W0_IS_NEGATIVE {
+            true => elt_inv.clone().cyclotomic_exp(&EXP_W0),
+            false => elt.clone().cyclotomic_exp(&EXP_W0),
+        };
+
+        w1_part.mul_assign(&w0_part);
+        w1_part
+    }
+
+}
 
 impl ScalarEngine for Mnt6 {
     type Fr = Fr;
@@ -46,315 +177,287 @@ impl Engine for Mnt6 {
             ),
         >,
     {
-        let mut pairs = vec![];
-        for &(p, q) in i {
-            if !p.is_zero() && !q.is_zero() {
-                pairs.push((p, q.coeffs.iter()));
-            }
-        }
-
-        // Twisting isomorphism from E to E'
-        fn ell(_f: &mut Fq6, coeffs: &(Fq3, Fq3, Fq3), p: &G1Affine) {
-            let mut c0 = coeffs.0;
-            let mut c1 = coeffs.1;
-
-            c0.c0.mul_assign(&p.y);
-            c0.c1.mul_assign(&p.y);
-
-            c1.c0.mul_assign(&p.x);
-            c1.c1.mul_assign(&p.x);
-
-            // Sparse multiplication in Fq6
-            // f.mul_by_014(&coeffs.2, &c1, &c0);
-        }
-
         let mut f = Fq6::one();
-
-        let mut found_one = false;
-        for i in BitIterator::new(&[BLS_X >> 1]) {
-            if !found_one {
-                found_one = i;
-                continue;
+        for (p, q) in i.into_iter() {
+            if !p.is_zero() && !q.is_zero() {
+                f.mul_assign(&Self::ate_pairing_loop(p, q));
             }
-
-            for &mut (p, ref mut coeffs) in &mut pairs {
-                ell(&mut f, coeffs.next().unwrap(), &p.0);
-            }
-
-            if i {
-                for &mut (p, ref mut coeffs) in &mut pairs {
-                    ell(&mut f, coeffs.next().unwrap(), &p.0);
-                }
-            }
-
-            f.square();
-        }
-
-        for &mut (p, ref mut coeffs) in &mut pairs {
-            ell(&mut f, coeffs.next().unwrap(), &p.0);
-        }
-
-        if BLS_X_IS_NEGATIVE {
-            f.conjugate();
         }
 
         f
     }
 
-    fn final_exponentiation(r: &Fq6) -> Option<Fq6> {
-        let mut f1 = *r;
-        f1.conjugate();
-
-        match r.inverse() {
-            Some(mut f2) => {
-                let mut r = f1;
-                r.mul_assign(&f2);
-                f2 = r;
-                r.frobenius_map(2);
-                r.mul_assign(&f2);
-
-                fn exp_by_x(f: &mut Fq6, x: u64) {
-                    *f = f.pow(&[x]);
-                    if BLS_X_IS_NEGATIVE {
-                        f.conjugate();
-                    }
-                }
-
-                let mut x = BLS_X;
-                let mut y0 = r;
-                y0.square();
-                let mut y1 = y0;
-                exp_by_x(&mut y1, x);
-                x >>= 1;
-                let mut y2 = y1;
-                exp_by_x(&mut y2, x);
-                x <<= 1;
-                let mut y3 = r;
-                y3.conjugate();
-                y1.mul_assign(&y3);
-                y1.conjugate();
-                y1.mul_assign(&y2);
-                y2 = y1;
-                exp_by_x(&mut y2, x);
-                y3 = y2;
-                exp_by_x(&mut y3, x);
-                y1.conjugate();
-                y3.mul_assign(&y1);
-                y1.conjugate();
-                y1.frobenius_map(3);
-                y2.frobenius_map(2);
-                y1.mul_assign(&y2);
-                y2 = y3;
-                exp_by_x(&mut y2, x);
-                y2.mul_assign(&y0);
-                y2.mul_assign(&r);
-                y1.mul_assign(&y2);
-                y2 = y3;
-                y2.frobenius_map(1);
-                y1.mul_assign(&y2);
-
-                Some(y1)
-            }
-            None => None,
+    fn final_exponentiation(f: &Fq6) -> Option<Fq6> {
+        let value_inv = f.inverse();
+        if value_inv.is_none() {
+            return None;
         }
+        let value_inv = value_inv.expect("is some");
+        let value_to_first_chunk = Self::final_exponentiation_part_one(f, &value_inv);
+        let value_inv_to_first_chunk = Self::final_exponentiation_part_one(&value_inv, f);
+
+        Some(Self::final_exponentiation_part_two(&value_to_first_chunk, &value_inv_to_first_chunk))
     }
 }
 
 impl G2Prepared {
     pub fn is_zero(&self) -> bool {
-        self.infinity
+        self.p.infinity
     }
 
     pub fn from_affine(q: G2Affine) -> Self {
-        if q.is_zero() {
-            return G2Prepared {
-                coeffs: vec![],
-                infinity: true,
-            };
+        let mut res = G2Prepared {
+            p: q,
+            x_over_twist: Fq3::zero(),
+            y_over_twist: Fq3::zero(),
+            double_coefficients:   vec![],
+            addition_coefficients: vec![],
+        };
+        res.precompute();
+        res
+    }
+
+    fn doubling_step(r: &mut G2ProjectiveExtended) -> AteDoubleCoefficients {
+        let mut a = r.t.clone();
+        a.square();
+        let mut b = r.x.clone();
+        b.square();
+        let mut c = r.y.clone();
+        c.square();
+        let mut d = c.clone();
+        d.square();
+
+        let mut e = r.x.clone();
+        e.add_assign(&c);
+        e.square();
+        e.sub_assign(&b);
+        e.sub_assign(&d);
+
+        let mut f = G2::get_coeff_a();
+        f.mul_assign(&a);
+        f.add_assign(&b);
+        f.add_assign(&b);
+        f.add_assign(&b);
+
+        let mut g = f.clone();
+        g.square();
+
+        let mut d_eight = d.clone();
+        d_eight.double();
+        d_eight.double();
+        d_eight.double();
+
+        let mut t0 = e.clone();
+        t0.double();
+        t0.double();
+
+        let mut x = g.clone();
+        x.sub_assign(&t0);
+
+        let mut y = e.clone();
+        y.double();
+        y.sub_assign(&x);
+        y.mul_assign(&f);
+        y.sub_assign(&d_eight);
+
+        let mut t0 = r.z.clone();
+        t0.square();
+
+        let mut z = r.y.clone();
+        z.add_assign(&r.z);
+        z.square();
+        z.sub_assign(&c);
+        z.sub_assign(&t0);
+
+        let mut t = z.clone();
+        t.square();
+
+        let mut c_h = z.clone();
+        c_h.add_assign(&r.t);
+        c_h.square();
+        c_h.sub_assign(&t);
+        c_h.sub_assign(&a);
+
+        let mut c_4c = c.clone();
+        c_4c.double();
+        c_4c.double();
+
+        let mut c_j = f.clone();
+        c_j.add_assign(&r.t);
+        c_j.square();
+        c_j.sub_assign(&g);
+        c_j.sub_assign(&a);
+
+        let mut c_l = f.clone();
+        c_l.add_assign(&r.x);
+        c_l.square();
+        c_l.sub_assign(&g);
+        c_l.sub_assign(&b);
+
+        let coeff = AteDoubleCoefficients { c_h, c_4c, c_j, c_l};
+
+        r.x = x;
+        r.y = y;
+        r.z = z;
+        r.t = t;
+
+        coeff
+    }
+
+    fn addition_step(
+        x: &Fq3,
+        y: &Fq3,
+        r: &mut G2ProjectiveExtended)
+    -> AteAdditionCoefficients {
+
+        let mut a = y.clone();
+        a.square();
+        let mut b = r.t.clone();
+        b.mul_assign(&x);
+
+        let mut d = r.z.clone();
+        d.add_assign(&y);
+        d.square();
+        d.sub_assign(&a);
+        d.sub_assign(&r.t);
+        d.mul_assign(&r.t);
+
+        let mut h = b.clone();
+        h.sub_assign(&r.x);
+
+        let mut i = h.clone();
+        i.square();
+
+        let mut e = i.clone();
+        e.double();
+        e.double();
+
+        let mut j = h.clone();
+        j.mul_assign(&e);
+
+        let mut v = r.x.clone();
+        v.mul_assign(&e);
+
+        let mut l1 = d.clone();
+        l1.sub_assign(&r.y);
+        l1.sub_assign(&r.y);
+
+        let mut x = l1.clone();
+        x.square();
+        x.sub_assign(&j);
+        x.sub_assign(&v);
+        x.sub_assign(&v);
+
+        let mut t0 = r.y.clone();
+        t0.double();
+        t0.mul_assign(&j);
+
+        let mut y = v.clone();
+        y.sub_assign(&x);
+        y.mul_assign(&l1);
+        y.sub_assign(&t0);
+
+        let mut z = r.z.clone();
+        z.add_assign(&h);
+        z.square();
+        z.sub_assign(&r.t);
+        z.sub_assign(&i);
+
+        let mut t = z.clone();
+        t.square();
+
+        let coeff = AteAdditionCoefficients { c_l1: l1, c_rz: z.clone() };
+
+        r.x = x;
+        r.y = y;
+        r.z = z;
+        r.t = t;
+
+        coeff
+    }
+
+    fn precompute(&mut self) {
+
+        if self.p.is_zero() {
+            return
         }
 
-        fn doubling_step(r: &mut G2) -> (Fq3, Fq3, Fq3) {
-            // Adaptation of Algorithm 26, https://eprint.iacr.org/2010/354.pdf
-            let mut tmp0 = r.x;
-            tmp0.square();
+        // not asserting normalization, it will be asserted in the loop
+        // precompute addition and doubling coefficients
+        self.x_over_twist = self.p.x;
+        self.x_over_twist.mul_assign(&TWIST_INV);
 
-            let mut tmp1 = r.y;
-            tmp1.square();
+        self.y_over_twist = self.p.y;
+        self.y_over_twist.mul_assign(&TWIST_INV);
 
-            let mut tmp2 = tmp1;
-            tmp2.square();
-
-            let mut tmp3 = tmp1;
-            tmp3.add_assign(&r.x);
-            tmp3.square();
-            tmp3.sub_assign(&tmp0);
-            tmp3.sub_assign(&tmp2);
-            tmp3.double();
-
-            let mut tmp4 = tmp0;
-            tmp4.double();
-            tmp4.add_assign(&tmp0);
-
-            let mut tmp6 = r.x;
-            tmp6.add_assign(&tmp4);
-
-            let mut tmp5 = tmp4;
-            tmp5.square();
-
-            let mut zsquared = r.z;
-            zsquared.square();
-
-            r.x = tmp5;
-            r.x.sub_assign(&tmp3);
-            r.x.sub_assign(&tmp3);
-
-            r.z.add_assign(&r.y);
-            r.z.square();
-            r.z.sub_assign(&tmp1);
-            r.z.sub_assign(&zsquared);
-
-            r.y = tmp3;
-            r.y.sub_assign(&r.x);
-            r.y.mul_assign(&tmp4);
-
-            tmp2.double();
-            tmp2.double();
-            tmp2.double();
-
-            r.y.sub_assign(&tmp2);
-
-            tmp3 = tmp4;
-            tmp3.mul_assign(&zsquared);
-            tmp3.double();
-            tmp3.negate();
-
-            tmp6.square();
-            tmp6.sub_assign(&tmp0);
-            tmp6.sub_assign(&tmp5);
-
-            tmp1.double();
-            tmp1.double();
-
-            tmp6.sub_assign(&tmp1);
-
-            tmp0 = r.z;
-            tmp0.mul_assign(&zsquared);
-            tmp0.double();
-
-            (tmp0, tmp3, tmp6)
-        }
-
-        fn addition_step(r: &mut G2, q: &G2Affine) -> (Fq3, Fq3, Fq3) {
-            // Adaptation of Algorithm 27, https://eprint.iacr.org/2010/354.pdf
-            let mut zsquared = r.z;
-            zsquared.square();
-
-            let mut ysquared = q.y;
-            ysquared.square();
-
-            let mut t0 = zsquared;
-            t0.mul_assign(&q.x);
-
-            let mut t1 = q.y;
-            t1.add_assign(&r.z);
-            t1.square();
-            t1.sub_assign(&ysquared);
-            t1.sub_assign(&zsquared);
-            t1.mul_assign(&zsquared);
-
-            let mut t2 = t0;
-            t2.sub_assign(&r.x);
-
-            let mut t3 = t2;
-            t3.square();
-
-            let mut t4 = t3;
-            t4.double();
-            t4.double();
-
-            let mut t5 = t4;
-            t5.mul_assign(&t2);
-
-            let mut t6 = t1;
-            t6.sub_assign(&r.y);
-            t6.sub_assign(&r.y);
-
-            let mut t9 = t6;
-            t9.mul_assign(&q.x);
-
-            let mut t7 = t4;
-            t7.mul_assign(&r.x);
-
-            r.x = t6;
-            r.x.square();
-            r.x.sub_assign(&t5);
-            r.x.sub_assign(&t7);
-            r.x.sub_assign(&t7);
-
-            r.z.add_assign(&t2);
-            r.z.square();
-            r.z.sub_assign(&zsquared);
-            r.z.sub_assign(&t3);
-
-            let mut t10 = q.y;
-            t10.add_assign(&r.z);
-
-            let mut t8 = t7;
-            t8.sub_assign(&r.x);
-            t8.mul_assign(&t6);
-
-            t0 = r.y;
-            t0.mul_assign(&t5);
-            t0.double();
-
-            r.y = t8;
-            r.y.sub_assign(&t0);
-
-            t10.square();
-            t10.sub_assign(&ysquared);
-
-            let mut ztsquared = r.z;
-            ztsquared.square();
-
-            t10.sub_assign(&ztsquared);
-
-            t9.double();
-            t9.sub_assign(&t10);
-
-            t10 = r.z;
-            t10.double();
-
-            t6.negate();
-
-            t1 = t6;
-            t1.double();
-
-            (t10, t1, t9)
-        }
-
-        let mut coeffs = vec![];
-        let mut r: G2 = q.into();
+        let mut r = G2ProjectiveExtended {
+            x: self.p.x,
+            y: self.p.y,
+            z: Fq3::one(),
+            t: Fq3::one(),
+        };
 
         let mut found_one = false;
-        for i in BitIterator::new([BLS_X >> 1]) {
+        for bit in BitIterator::new(&MNT6_X).skip(1) {
+
             if !found_one {
-                found_one = i;
+                found_one = bit;
                 continue;
             }
 
-            coeffs.push(doubling_step(&mut r));
+            let coeff = Self::doubling_step(&mut r);
+            self.double_coefficients.push(coeff);
 
-            if i {
-                coeffs.push(addition_step(&mut r, &q));
+            if bit {
+                let coeff = Self::addition_step(&self.p.x, &self.p.y, &mut r);
+                self.addition_coefficients.push(coeff);
             }
         }
 
-        coeffs.push(doubling_step(&mut r));
+        if MNT6_X_IS_NEGATIVE {
+            let rz_inv = r.z.inverse().expect("z should not be equal to zero");
+            let mut rz2_inv = rz_inv;
+            rz2_inv.square();
+            let mut rz3_inv = rz_inv;
+            rz3_inv.mul_assign(&rz2_inv);
 
-        G2Prepared {
-            coeffs,
-            infinity: false,
+            let mut minus_r_affine_x = rz2_inv;
+            minus_r_affine_x.mul_assign(&r.x);
+            let mut minus_r_affine_y = rz3_inv;
+            minus_r_affine_y.mul_assign(&r.y);
+            minus_r_affine_y.negate();
+
+            let coeff = Self::addition_step(
+                &minus_r_affine_x,
+                &minus_r_affine_y,
+                &mut r,
+            );
+
+            self.addition_coefficients.push(coeff);
         }
+    }
+}
+
+impl G1Prepared {
+
+    pub fn is_zero(&self) -> bool {
+        return self.p.infinity;
+    }
+
+    pub fn from_affine(p: G1Affine) -> Self {
+        let mut res = G1Prepared {
+            p: p,
+            x_by_twist: TWIST,
+            y_by_twist: TWIST
+        };
+
+        if p.is_zero() {
+            return res;
+        }
+
+        res.x_by_twist.mul_assign_by_fp(&p.x);
+        res.y_by_twist.mul_assign_by_fp(&p.y);
+        res
     }
 }
 
