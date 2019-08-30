@@ -189,7 +189,7 @@ impl SqrtField for Fq2 {
     fn legendre(&self) -> ::ff::LegendreSymbol {
         self.norm().legendre()
     }
-    // TODO
+
     #[inline(always)]
     fn sqrt(&self) -> Option<Self> {
         if self.c1.is_zero() {
