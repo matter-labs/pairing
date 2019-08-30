@@ -143,10 +143,10 @@ impl Mnt6 {
         let mut elt_q = elt.clone();
         elt_q.frobenius_map(1);
 
-        let mut w1_part = elt_q.clone().cyclotomic_exp(&EXP_W1);
+        let mut w1_part = elt_q.cyclotomic_exp(&EXP_W1);
         let w0_part = match EXP_W0_IS_NEGATIVE {
-            true => elt_inv.clone().cyclotomic_exp(&EXP_W0),
-            false => elt.clone().cyclotomic_exp(&EXP_W0),
+            true => elt_inv.cyclotomic_exp(&EXP_W0),
+            false => elt.cyclotomic_exp(&EXP_W0),
         };
 
         w1_part.mul_assign(&w0_part);
@@ -218,16 +218,16 @@ impl G2Prepared {
     }
 
     fn doubling_step(r: &mut G2ProjectiveExtended) -> AteDoubleCoefficients {
-        let mut a = r.t.clone();
+        let mut a = r.t;
         a.square();
-        let mut b = r.x.clone();
+        let mut b = r.x;
         b.square();
-        let mut c = r.y.clone();
+        let mut c = r.y;
         c.square();
-        let mut d = c.clone();
+        let mut d = c;
         d.square();
 
-        let mut e = r.x.clone();
+        let mut e = r.x;
         e.add_assign(&c);
         e.square();
         e.sub_assign(&b);
@@ -239,56 +239,56 @@ impl G2Prepared {
         f.add_assign(&b);
         f.add_assign(&b);
 
-        let mut g = f.clone();
+        let mut g = f;
         g.square();
 
-        let mut d_eight = d.clone();
+        let mut d_eight = d;
         d_eight.double();
         d_eight.double();
         d_eight.double();
 
-        let mut t0 = e.clone();
+        let mut t0 = e;
         t0.double();
         t0.double();
 
-        let mut x = g.clone();
+        let mut x = g;
         x.sub_assign(&t0);
 
-        let mut y = e.clone();
+        let mut y = e;
         y.double();
         y.sub_assign(&x);
         y.mul_assign(&f);
         y.sub_assign(&d_eight);
 
-        let mut t0 = r.z.clone();
+        let mut t0 = r.z;
         t0.square();
 
-        let mut z = r.y.clone();
+        let mut z = r.y;
         z.add_assign(&r.z);
         z.square();
         z.sub_assign(&c);
         z.sub_assign(&t0);
 
-        let mut t = z.clone();
+        let mut t = z;
         t.square();
 
-        let mut c_h = z.clone();
+        let mut c_h = z;
         c_h.add_assign(&r.t);
         c_h.square();
         c_h.sub_assign(&t);
         c_h.sub_assign(&a);
 
-        let mut c_4c = c.clone();
+        let mut c_4c = c;
         c_4c.double();
         c_4c.double();
 
-        let mut c_j = f.clone();
+        let mut c_j = f;
         c_j.add_assign(&r.t);
         c_j.square();
         c_j.sub_assign(&g);
         c_j.sub_assign(&a);
 
-        let mut c_l = f.clone();
+        let mut c_l = f;
         c_l.add_assign(&r.x);
         c_l.square();
         c_l.sub_assign(&g);
@@ -312,61 +312,61 @@ impl G2Prepared {
 
         let mut a = y.clone();
         a.square();
-        let mut b = r.t.clone();
+        let mut b = r.t;
         b.mul_assign(&x);
 
-        let mut d = r.z.clone();
+        let mut d = r.z;
         d.add_assign(&y);
         d.square();
         d.sub_assign(&a);
         d.sub_assign(&r.t);
         d.mul_assign(&r.t);
 
-        let mut h = b.clone();
+        let mut h = b;
         h.sub_assign(&r.x);
 
-        let mut i = h.clone();
+        let mut i = h;
         i.square();
 
-        let mut e = i.clone();
+        let mut e = i;
         e.double();
         e.double();
 
-        let mut j = h.clone();
+        let mut j = h;
         j.mul_assign(&e);
 
-        let mut v = r.x.clone();
+        let mut v = r.x;
         v.mul_assign(&e);
 
-        let mut l1 = d.clone();
+        let mut l1 = d;
         l1.sub_assign(&r.y);
         l1.sub_assign(&r.y);
 
-        let mut x = l1.clone();
+        let mut x = l1;
         x.square();
         x.sub_assign(&j);
         x.sub_assign(&v);
         x.sub_assign(&v);
 
-        let mut t0 = r.y.clone();
+        let mut t0 = r.y;
         t0.double();
         t0.mul_assign(&j);
 
-        let mut y = v.clone();
+        let mut y = v;
         y.sub_assign(&x);
         y.mul_assign(&l1);
         y.sub_assign(&t0);
 
-        let mut z = r.z.clone();
+        let mut z = r.z;
         z.add_assign(&h);
         z.square();
         z.sub_assign(&r.t);
         z.sub_assign(&i);
 
-        let mut t = z.clone();
+        let mut t = z;
         t.square();
 
-        let coeff = AteAdditionCoefficients { c_l1: l1, c_rz: z.clone() };
+        let coeff = AteAdditionCoefficients { c_l1: l1, c_rz: z };
 
         r.x = x;
         r.y = y;
@@ -467,29 +467,6 @@ use crate::{
     ff::{ PrimeField },
     CurveProjective,
 };
-
-#[test]
-fn pairing_test() {
-    let p = G1::one();
-    let q = G2::one();
-
-    let p_prepared = p.into_affine().prepare();
-    println!("{:#?}", p_prepared);
-
-    let q_prepared = q.into_affine().prepare();
-    println!("{:#?}", q_prepared);
-
-    let miller_result = Mnt6::miller_loop(
-        [(&p_prepared, &q_prepared)].into_iter(),
-    );
-    println!("{}", miller_result);
-
-    let t = Mnt6::final_exponentiation(&miller_result).unwrap();
-
-    // Works iff final exponentiation works
-    let t_r = t.pow(&Fr::char());
-    assert_eq!(t_r, Fq6::one());
-}
 
 #[test]
 fn mnt6_engine_tests() {

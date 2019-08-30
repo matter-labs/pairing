@@ -16,7 +16,7 @@ pub fn engine_tests<E: Engine>() {
         assert!(a.pairing_with(&b) == E::pairing(a, b));
     }
 
-    for _ in 0..1000 {
+    for _ in 0..10 {
         let z1 = E::G1Affine::zero().prepare();
         let z2 = E::G2Affine::zero().prepare();
 
@@ -51,7 +51,7 @@ fn random_miller_loop_tests<E: Engine>() {
     let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
 
     // Exercise the miller loop for a reduced pairing
-    for _ in 0..1000 {
+    for _ in 0..10 {
         let a = E::G1::rand(&mut rng);
         let b = E::G2::rand(&mut rng);
 
@@ -66,7 +66,7 @@ fn random_miller_loop_tests<E: Engine>() {
     }
 
     // Exercise a double miller loop
-    for _ in 0..1000 {
+    for _ in 0..10 {
         let a = E::G1::rand(&mut rng);
         let b = E::G2::rand(&mut rng);
         let c = E::G1::rand(&mut rng);
@@ -93,7 +93,7 @@ fn random_miller_loop_tests<E: Engine>() {
 fn random_bilinearity_tests<E: Engine>() {
     let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
 
-    for _ in 0..1000 {
+    for _ in 0..10 {
         let a = E::G1::rand(&mut rng);
         let b = E::G2::rand(&mut rng);
 
