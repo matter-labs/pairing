@@ -5,7 +5,7 @@ use crate::{CurveAffine, CurveProjective, Engine, Field, PrimeField};
 pub fn engine_tests<E: Engine>() {
     let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
 
-    for _ in 0..1000 {
+    for _ in 0..10 {
         let a = E::G1::rand(&mut rng).into_affine();
         let b = E::G2::rand(&mut rng).into_affine();
 
