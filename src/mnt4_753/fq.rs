@@ -338,10 +338,26 @@ pub const TWIST_INV: Fq2 = Fq2 {
     ])),
 };
 
-pub const MNT4_X: [u64; 6] = [0x7a7713041ba18000, 0x6b0344c4e2c428b0, 0x733b714aa43c31a6, 0x51852c8cbe26e600, 0x86dcbcee5dcda7fe, 0x015474b1d641a3fd];
+pub const MNT4_X: [u64; 6] = [
+    0x7a7713041ba18000, 
+    0x6b0344c4e2c428b0, 
+    0x733b714aa43c31a6, 
+    0x51852c8cbe26e600, 
+    0x86dcbcee5dcda7fe, 
+    0x015474b1d641a3fd
+];
+
 pub const MNT4_X_IS_NEGATIVE: bool = true;
-// 
-pub const EXP_W0: [u64; 6] = [0x7a7713041ba17fff, 0x6b0344c4e2c428b0, 0x733b714aa43c31a6, 0x51852c8cbe26e600, 0x86dcbcee5dcda7fe, 0x015474b1d641a3fd];
+
+pub const EXP_W0: [u64; 6] = [
+    0x7a7713041ba17fff,
+    0x6b0344c4e2c428b0,
+    0x733b714aa43c31a6,
+    0x51852c8cbe26e600,
+    0x86dcbcee5dcda7fe,
+    0x015474b1d641a3fd
+];
+
 pub const EXP_W0_IS_NEGATIVE: bool = true;
 pub const EXP_W1: [u64; 1] = [1u64];
 

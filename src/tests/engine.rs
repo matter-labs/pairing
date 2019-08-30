@@ -4,6 +4,9 @@ use crate::{CurveAffine, CurveProjective, Engine, Field, PrimeField};
 
 pub fn engine_tests<E: Engine>() {
     let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
+    
+    random_bilinearity_tests::<E>();
+    random_miller_loop_tests::<E>();
 
     for _ in 0..10 {
         let a = E::G1::rand(&mut rng).into_affine();
@@ -42,9 +45,6 @@ pub fn engine_tests<E: Engine>() {
             E::final_exponentiation(&E::miller_loop(&[(&a, &b), (&c, &z2)])).unwrap()
         );
     }
-
-    random_bilinearity_tests::<E>();
-    random_miller_loop_tests::<E>();
 }
 
 fn random_miller_loop_tests<E: Engine>() {

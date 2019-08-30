@@ -41,6 +41,7 @@ macro_rules! curve_impl {
         }
 
         impl PartialEq for $projective {
+            #[inline(always)]
             fn eq(&self, other: &$projective) -> bool {
                 if self.is_zero() {
                     return other.is_zero();
@@ -83,6 +84,7 @@ macro_rules! curve_impl {
         }
 
         impl $affine {
+            #[inline(always)]
             fn mul_bits<S: AsRef<[u64]>>(&self, bits: BitIterator<S>) -> $projective {
                 let mut res = $projective::zero();
                 for i in bits {
@@ -99,6 +101,7 @@ macro_rules! curve_impl {
             ///
             /// If and only if `greatest` is set will the lexicographically
             /// largest y-coordinate be selected.
+            #[inline(always)]
             fn get_point_from_x(x: $basefield, greatest: bool) -> Option<$affine> {
                 // Compute x^3 + ax + b
                 let mut x3axb = x;
@@ -121,6 +124,7 @@ macro_rules! curve_impl {
                 })
             }
 
+            #[inline(always)]
             fn is_on_curve(&self) -> bool {
                 if self.is_zero() {
                     true
@@ -139,6 +143,7 @@ macro_rules! curve_impl {
                 }
             }
 
+            #[inline(always)]
             fn is_in_correct_subgroup_assuming_on_curve(&self) -> bool {
                 self.mul($scalarfield::char()).is_zero()
             }
@@ -155,6 +160,7 @@ macro_rules! curve_impl {
             type Pair = $pairing;
             type PairingResult = Fq6;
 
+            #[inline(always)]
             fn zero() -> Self {
                 $affine {
                     x: $basefield::zero(),
@@ -163,39 +169,47 @@ macro_rules! curve_impl {
                 }
             }
 
+            #[inline(always)]
             fn one() -> Self {
                 Self::get_generator()
             }
 
+            #[inline(always)]
             fn is_zero(&self) -> bool {
                 self.infinity
             }
 
+            #[inline(always)]
             fn mul<S: Into<<Self::Scalar as PrimeField>::Repr>>(&self, by: S) -> $projective {
                 let bits = BitIterator::new(by.into());
                 self.mul_bits(bits)
             }
 
+            #[inline(always)]
             fn negate(&mut self) {
                 if !self.is_zero() {
                     self.y.negate();
                 }
             }
 
+            #[inline(always)]
             fn into_projective(&self) -> $projective {
                 (*self).into()
             }
 
+            #[inline(always)]
             fn prepare(&self) -> Self::Prepared {
                 $prepared::from_affine(*self)
             }
 
+            #[inline(always)]
             fn pairing_with(&self, other: &Self::Pair) -> Self::PairingResult {
                 self.perform_pairing(other)
             }
         }
 
         impl Rand for $projective {
+            #[inline(always)]
             fn rand<R: Rng>(rng: &mut R) -> Self {
                 loop {
                     let x = rng.gen();
@@ -220,6 +234,7 @@ macro_rules! curve_impl {
 
             // The point at infinity is always represented by
             // Z = 0.
+            #[inline(always)]
             fn zero() -> Self {
                 $projective {
                     x: $basefield::zero(),
@@ -228,20 +243,24 @@ macro_rules! curve_impl {
                 }
             }
 
+            #[inline(always)]
             fn one() -> Self {
                 $affine::one().into()
             }
 
             // The point at infinity is always represented by
             // Z = 0.
+            #[inline(always)]
             fn is_zero(&self) -> bool {
                 self.z.is_zero()
             }
 
+            #[inline(always)]
             fn is_normalized(&self) -> bool {
                 self.is_zero() || self.z == $basefield::one()
             }
 
+            #[inline(always)]
             fn batch_normalization(v: &mut [Self]) {
                 // Montgomery’s Trick and Fast Implementation of Masked AES
                 // Genelle, Prouff and Quisquater
@@ -297,6 +316,7 @@ macro_rules! curve_impl {
             }
 
             // https://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian.html#doubling-dbl-2007-bl
+            #[inline(always)]
             fn double(&mut self) {
                 if self.is_zero() {
                     return;
@@ -365,6 +385,7 @@ macro_rules! curve_impl {
             }
 
             // https://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian.html#addition-add-2007-bl
+            #[inline(always)]
             fn add_assign(&mut self, other: &Self) {
                 if self.is_zero() {
                     *self = *other;
@@ -455,6 +476,7 @@ macro_rules! curve_impl {
 
             // For Z2 = 1
             // https://www.hyperelliptic.org/EFD/g1p/auto-shortw-jacobian.html#addition-madd-2007-bl
+            #[inline(always)]
             fn add_assign_mixed(&mut self, other: &Self::Affine) {
                 if other.is_zero() {
                     return;
@@ -535,12 +557,14 @@ macro_rules! curve_impl {
                 }
             }
 
+            #[inline(always)]
             fn negate(&mut self) {
                 if !self.is_zero() {
                     self.y.negate()
                 }
             }
 
+            #[inline(always)]
             fn mul_assign<S: Into<<Self::Scalar as PrimeField>::Repr>>(&mut self, other: S) {
                 let mut res = Self::zero();
 
@@ -561,14 +585,17 @@ macro_rules! curve_impl {
                 *self = res;
             }
 
+            #[inline(always)]
             fn into_affine(&self) -> $affine {
                 (*self).into()
             }
 
+            #[inline(always)]
             fn recommended_wnaf_for_scalar(scalar: <Self::Scalar as PrimeField>::Repr) -> usize {
                 Self::empirical_recommended_wnaf_for_scalar(scalar)
             }
 
+            #[inline(always)]
             fn recommended_wnaf_for_num_scalars(num_scalars: usize) -> usize {
                 Self::empirical_recommended_wnaf_for_num_scalars(num_scalars)
             }
@@ -577,6 +604,7 @@ macro_rules! curve_impl {
         // The affine point X, Y is represented in the jacobian
         // coordinates with Z = 1.
         impl From<$affine> for $projective {
+            #[inline(always)]
             fn from(p: $affine) -> $projective {
                 if p.is_zero() {
                     $projective::zero()
@@ -593,6 +621,7 @@ macro_rules! curve_impl {
         // The projective point X, Y, Z is represented in the affine
         // coordinates as X/Z^2, Y/Z^3.
         impl From<$projective> for $affine {
+            #[inline(always)]
             fn from(p: $projective) -> $affine {
                 if p.is_zero() {
                     $affine::zero()
@@ -1749,13 +1778,11 @@ pub mod g2 {
     }
 
     #[test]
-    fn g2_cofactor() {
+    fn g2_cofactor_mnt6() {
         let mut rng = XorShiftRng::from_seed([0x5dbe6259, 0x8d313d76, 0x3237db17, 0xe5bc0654]);
         for _ in 0..1000 {
             let mut g = G2::rand(&mut rng);
             g.mul_assign(Fr::char());
-            let factor = Fr::from_str("67").expect("OK");
-            g.mul_assign(factor); 
             assert!(g.is_zero());
         }
     }

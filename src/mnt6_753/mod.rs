@@ -233,7 +233,7 @@ impl G2Prepared {
         e.sub_assign(&b);
         e.sub_assign(&d);
 
-        let mut f = G2::get_coeff_a();
+        let mut f = G2Affine::get_coeff_a();
         f.mul_assign(&a);
         f.add_assign(&b);
         f.add_assign(&b);
@@ -445,6 +445,7 @@ impl G1Prepared {
     }
 
     pub fn from_affine(p: G1Affine) -> Self {
+
         let mut res = G1Prepared {
             p: p,
             x_by_twist: TWIST,
@@ -459,6 +460,35 @@ impl G1Prepared {
         res.y_by_twist.mul_assign_by_fp(&p.y);
         res
     }
+}
+
+#[cfg(test)]
+use crate::{
+    ff::{ PrimeField },
+    CurveProjective,
+};
+
+#[test]
+fn pairing_test() {
+    let p = G1::one();
+    let q = G2::one();
+
+    let p_prepared = p.into_affine().prepare();
+    println!("{:#?}", p_prepared);
+
+    let q_prepared = q.into_affine().prepare();
+    println!("{:#?}", q_prepared);
+
+    let miller_result = Mnt6::miller_loop(
+        [(&p_prepared, &q_prepared)].into_iter(),
+    );
+    println!("{}", miller_result);
+
+    let t = Mnt6::final_exponentiation(&miller_result).unwrap();
+
+    // Works iff final exponentiation works
+    let t_r = t.pow(&Fr::char());
+    assert_eq!(t_r, Fq6::one());
 }
 
 #[test]
