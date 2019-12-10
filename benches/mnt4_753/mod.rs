@@ -1,7 +1,7 @@
 mod ec;
 mod fq;
-mod fq12;
 mod fq2;
+mod fq4;
 mod fr;
 
 use rand::{Rand, SeedableRng, XorShiftRng};

@@ -7,3 +7,5 @@ extern crate test;
 
 mod bls12_381;
 mod bn256;
+mod mnt4_753;
+mod mnt6_753;
