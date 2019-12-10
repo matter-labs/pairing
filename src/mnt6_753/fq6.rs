@@ -1,12 +1,9 @@
-use super::{
-    fq::{FROBENIUS_COEFF_FQ6_C1},
-    fq3::Fq3,
-};
+use super::{fq::FROBENIUS_COEFF_FQ6_C1, fq3::Fq3};
 
 use crate::{
-    BitIterator,
-    rand::{Rand, Rng},
     ff::Field,
+    rand::{Rand, Rng},
+    BitIterator,
 };
 
 /// An element of Fq6, represented by c0 + c1 * w.

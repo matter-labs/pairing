@@ -5,8 +5,8 @@ mod fq4;
 mod fr;
 
 use self::{
-    ec::g2::{ AteDoubleCoefficients, AteAdditionCoefficients, G2ProjectiveExtended },
-    fq::{ MNT4_X, MNT4_X_IS_NEGATIVE, TWIST_INV, TWIST, EXP_W0, EXP_W1, EXP_W0_IS_NEGATIVE }
+    ec::g2::{AteAdditionCoefficients, AteDoubleCoefficients, G2ProjectiveExtended},
+    fq::{EXP_W0, EXP_W0_IS_NEGATIVE, EXP_W1, MNT4_X, MNT4_X_IS_NEGATIVE, TWIST, TWIST_INV},
 };
 
 pub use self::ec::{
@@ -19,7 +19,7 @@ pub use self::fq2::Fq2;
 pub use self::fq4::Fq4;
 pub use self::fr::{Fr, FrRepr};
 
-use super::{Engine, CurveAffine};
+use super::{CurveAffine, Engine};
 
 use ff::{BitIterator, Field, ScalarEngine};
 
@@ -27,12 +27,7 @@ use ff::{BitIterator, Field, ScalarEngine};
 pub struct Mnt4;
 
 impl Mnt4 {
-
-    fn ate_pairing_loop(
-        p: &G1Prepared,
-        q: &G2Prepared,
-    ) -> Fq4 {
-
+    fn ate_pairing_loop(p: &G1Prepared, q: &G2Prepared) -> Fq4 {
         let mut l1_coeff = Fq2::zero();
         l1_coeff.c0 = p.p.x;
         l1_coeff.sub_assign(&q.x_over_twist);
@@ -42,7 +37,6 @@ impl Mnt4 {
         let mut dbl_idx: usize = 0;
         let mut add_idx: usize = 0;
 
-
         // The for loop is executed for all bits (EXCEPT the MSB itself) of
         let mut found_one = false;
         for bit in BitIterator::new(&MNT4_X).skip(1) {
@@ -50,7 +44,7 @@ impl Mnt4 {
                 found_one = bit;
                 continue;
             }
-            
+
             let dc = &q.double_coefficients[dbl_idx];
             dbl_idx += 1;
 
@@ -147,7 +141,6 @@ impl Mnt4 {
         w1_part.mul_assign(&w0_part);
         w1_part
     }
-
 }
 
 impl ScalarEngine for Mnt4 {
@@ -191,7 +184,10 @@ impl Engine for Mnt4 {
         let value_to_first_chunk = Self::final_exponentiation_part_one(f, &value_inv);
         let value_inv_to_first_chunk = Self::final_exponentiation_part_one(&value_inv, f);
 
-        Some(Self::final_exponentiation_part_two(&value_to_first_chunk, &value_inv_to_first_chunk))
+        Some(Self::final_exponentiation_part_two(
+            &value_to_first_chunk,
+            &value_inv_to_first_chunk,
+        ))
     }
 }
 
@@ -205,7 +201,7 @@ impl G2Prepared {
             p: q,
             x_over_twist: Fq2::zero(),
             y_over_twist: Fq2::zero(),
-            double_coefficients:   vec![],
+            double_coefficients: vec![],
             addition_coefficients: vec![],
         };
         res.precompute();
@@ -289,7 +285,12 @@ impl G2Prepared {
         c_l.sub_assign(&g);
         c_l.sub_assign(&b);
 
-        let coeff = AteDoubleCoefficients { c_h, c_4c, c_j, c_l};
+        let coeff = AteDoubleCoefficients {
+            c_h,
+            c_4c,
+            c_j,
+            c_l,
+        };
 
         r.x = x;
         r.y = y;
@@ -299,12 +300,7 @@ impl G2Prepared {
         coeff
     }
 
-    fn addition_step(
-        x: &Fq2,
-        y: &Fq2,
-        r: &mut G2ProjectiveExtended)
-    -> AteAdditionCoefficients {
-
+    fn addition_step(x: &Fq2, y: &Fq2, r: &mut G2ProjectiveExtended) -> AteAdditionCoefficients {
         let mut a = y.clone();
         a.square();
         let mut b = r.t.clone();
@@ -361,7 +357,10 @@ impl G2Prepared {
         let mut t = z.clone();
         t.square();
 
-        let coeff = AteAdditionCoefficients { c_l1: l1, c_rz: z.clone() };
+        let coeff = AteAdditionCoefficients {
+            c_l1: l1,
+            c_rz: z.clone(),
+        };
 
         r.x = x;
         r.y = y;
@@ -372,9 +371,8 @@ impl G2Prepared {
     }
 
     fn precompute(&mut self) {
-
         if self.p.is_zero() {
-            return
+            return;
         }
 
         // not asserting normalization, it will be asserted in the loop
@@ -394,7 +392,6 @@ impl G2Prepared {
 
         let mut found_one = false;
         for bit in BitIterator::new(&MNT4_X).skip(1) {
-
             if !found_one {
                 found_one = bit;
                 continue;
@@ -422,11 +419,7 @@ impl G2Prepared {
             minus_r_affine_y.mul_assign(&r.y);
             minus_r_affine_y.negate();
 
-            let coeff = Self::addition_step(
-                &minus_r_affine_x,
-                &minus_r_affine_y,
-                &mut r,
-            );
+            let coeff = Self::addition_step(&minus_r_affine_x, &minus_r_affine_y, &mut r);
 
             self.addition_coefficients.push(coeff);
         }
@@ -434,7 +427,6 @@ impl G2Prepared {
 }
 
 impl G1Prepared {
-
     pub fn is_zero(&self) -> bool {
         return self.p.infinity;
     }
@@ -443,7 +435,7 @@ impl G1Prepared {
         let mut res = G1Prepared {
             p: p,
             x_by_twist: TWIST,
-            y_by_twist: TWIST
+            y_by_twist: TWIST,
         };
 
         if p.is_zero() {

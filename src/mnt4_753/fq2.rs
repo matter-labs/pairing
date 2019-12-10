@@ -1,6 +1,6 @@
 use super::fq::{Fq, FROBENIUS_COEFF_FQ2_C1, NON_RESIDUE};
+use ff::LegendreSymbol::{QuadraticNonResidue, QuadraticResidue, Zero};
 use ff::{Field, SqrtField};
-use ff::LegendreSymbol::{ Zero, QuadraticResidue, QuadraticNonResidue };
 use rand::{Rand, Rng};
 
 use std::cmp::Ordering;
@@ -101,8 +101,8 @@ impl Field for Fq2 {
     #[inline(always)]
     fn square(&mut self) {
         // Devegili OhEig Scott Dahab
-        // --- 
-        // Multiplication and Squaring on Pairing-Friendly Fields.pdf; 
+        // ---
+        // Multiplication and Squaring on Pairing-Friendly Fields.pdf;
         // Section 3 (Karatsuba squaring)
         let mut aa = self.c0;
         aa.square();
@@ -184,7 +184,6 @@ impl Field for Fq2 {
 }
 
 impl SqrtField for Fq2 {
-
     #[inline(always)]
     fn legendre(&self) -> ::ff::LegendreSymbol {
         self.norm().legendre()
@@ -193,7 +192,10 @@ impl SqrtField for Fq2 {
     #[inline(always)]
     fn sqrt(&self) -> Option<Self> {
         if self.c1.is_zero() {
-            return self.c0.sqrt().map(|c0| Self{c0: c0, c1: Fq::zero()});
+            return self.c0.sqrt().map(|c0| Self {
+                c0: c0,
+                c1: Fq::zero(),
+            });
         }
         match self.legendre() {
             // Square root based on the complex method. See
@@ -203,9 +205,14 @@ impl SqrtField for Fq2 {
             QuadraticResidue => {
                 let mut two_inv = Fq::one();
                 two_inv.double();
-                two_inv = two_inv.inverse().expect("Two should always have an inverse");
+                two_inv = two_inv
+                    .inverse()
+                    .expect("Two should always have an inverse");
 
-                let alpha = self.norm().sqrt().expect("We are in the QR case, the norm should have a square root");
+                let alpha = self
+                    .norm()
+                    .sqrt()
+                    .expect("We are in the QR case, the norm should have a square root");
                 //let mut delta = (alpha + &self.c0) * &two_inv;
                 let mut delta = self.c0;
                 delta.add_assign(&alpha);
@@ -220,8 +227,8 @@ impl SqrtField for Fq2 {
                 let mut c1 = self.c1;
                 c1.mul_assign(&two_inv);
                 c1.mul_assign(&c0_inv);
-                Some(Fq2{c0: c0, c1: c1})
-            },
+                Some(Fq2 { c0: c0, c1: c1 })
+            }
         }
     }
 }
@@ -316,4 +323,3 @@ fn fq2_field_tests() {
     crate::tests::field::random_sqrt_tests::<Fq2>();
     crate::tests::field::random_frobenius_tests::<Fq2, _>(super::fq::Fq::char(), 13);
 }
-

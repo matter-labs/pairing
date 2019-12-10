@@ -1,14 +1,11 @@
 extern crate std;
 
-use super::{
-    fq::{FROBENIUS_COEFF_FQ4_C1},
-    fq2::Fq2,
-};
+use super::{fq::FROBENIUS_COEFF_FQ4_C1, fq2::Fq2};
 
 use crate::{
-    BitIterator,
-    rand::{Rand, Rng},
     ff::Field,
+    rand::{Rand, Rng},
+    BitIterator,
 };
 
 use std::mem::swap;
@@ -36,13 +33,12 @@ impl Rand for Fq4 {
 }
 
 impl Fq4 {
-
     #[inline(always)]
     pub fn conjugate(&mut self) {
         self.c1.negate();
     }
 
-    // When the Fq4 element is known to be an r-th root of 
+    // When the Fq4 element is known to be an r-th root of
     // unity, we can use this function instead of squaring
     // TODO: Implement NAF
     #[inline(always)]
@@ -65,7 +61,7 @@ impl Fq4 {
         res
     }
 
-    // When the Fq4 element is known to be an r-th root of 
+    // When the Fq4 element is known to be an r-th root of
     // unity, we can use this function instead of squaring
     #[inline(always)]
     pub fn cyclotomic_square(&mut self) {
@@ -84,7 +80,6 @@ impl Fq4 {
 }
 
 impl Field for Fq4 {
-    
     #[inline(always)]
     fn zero() -> Self {
         Fq4 {
@@ -142,8 +137,8 @@ impl Field for Fq4 {
     #[inline(always)]
     fn square(&mut self) {
         // Devegili OhEig Scott Dahab
-        // --- 
-        // Multiplication and Squaring on Pairing-Friendly Fields.pdf; 
+        // ---
+        // Multiplication and Squaring on Pairing-Friendly Fields.pdf;
         // Section 3 (Karatsuba squaring)
         let mut aa = self.c0;
         aa.square();

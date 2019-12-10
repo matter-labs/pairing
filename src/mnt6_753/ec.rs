@@ -661,8 +661,10 @@ macro_rules! curve_impl {
 pub mod g1 {
     use super::super::{Fq, Fq3, Fq6, FqRepr, Fr, FrRepr, Mnt6};
     use super::g2::G2Affine;
+    use crate::{
+        CurveAffine, CurveProjective, EncodedPoint, Engine, GroupDecodingError, RawEncodable,
+    };
     use ff::{BitIterator, Field, PrimeField, PrimeFieldRepr, SqrtField};
-    use crate::{RawEncodable, CurveAffine, CurveProjective, EncodedPoint, GroupDecodingError, Engine};
     use rand::{Rand, Rng};
     use std::fmt;
 
@@ -931,7 +933,7 @@ pub mod g1 {
         }
     }
 
-        impl RawEncodable for G1Affine {
+    impl RawEncodable for G1Affine {
         fn into_raw_uncompressed_le(&self) -> Self::Uncompressed {
             let mut res = Self::Uncompressed::empty();
             {
@@ -945,8 +947,8 @@ pub mod g1 {
         }
 
         fn from_raw_uncompressed_le_unchecked(
-            encoded: &Self::Uncompressed, 
-            _infinity: bool
+            encoded: &Self::Uncompressed,
+            _infinity: bool,
         ) -> Result<Self, GroupDecodingError> {
             let copy = encoded.0;
             if copy.iter().all(|b| *b == 0) {
@@ -963,17 +965,18 @@ pub mod g1 {
             }
 
             Ok(G1Affine {
-                x: Fq::from_raw_repr(x).map_err(|e| {
-                    GroupDecodingError::CoordinateDecodingError("x coordinate", e)
-                })?,
-                y: Fq::from_raw_repr(y).map_err(|e| {
-                    GroupDecodingError::CoordinateDecodingError("y coordinate", e)
-                })?,
+                x: Fq::from_raw_repr(x)
+                    .map_err(|e| GroupDecodingError::CoordinateDecodingError("x coordinate", e))?,
+                y: Fq::from_raw_repr(y)
+                    .map_err(|e| GroupDecodingError::CoordinateDecodingError("y coordinate", e))?,
                 infinity: false,
             })
         }
 
-        fn from_raw_uncompressed_le(encoded: &Self::Uncompressed, _infinity: bool) -> Result<Self, GroupDecodingError> {
+        fn from_raw_uncompressed_le(
+            encoded: &Self::Uncompressed,
+            _infinity: bool,
+        ) -> Result<Self, GroupDecodingError> {
             let affine = Self::from_raw_uncompressed_le_unchecked(&encoded, _infinity)?;
 
             if !affine.is_on_curve() {
@@ -1020,7 +1023,7 @@ pub mod g1 {
 
     #[derive(Eq, PartialEq, Copy, Clone, Debug)]
     pub struct G1Prepared {
-        pub p:       G1Affine,
+        pub p: G1Affine,
         pub x_by_twist: Fq3,
         pub y_by_twist: Fq3,
     }
@@ -1256,8 +1259,8 @@ pub mod g1 {
 pub mod g2 {
     use super::super::{Fq, Fq3, Fq6, FqRepr, Fr, FrRepr, Mnt6};
     use super::g1::G1Affine;
+    use crate::{CurveAffine, CurveProjective, EncodedPoint, Engine, GroupDecodingError};
     use ff::{BitIterator, Field, PrimeField, PrimeFieldRepr, SqrtField};
-    use crate::{CurveAffine, CurveProjective, EncodedPoint, GroupDecodingError, Engine};
     use rand::{Rand, Rng};
     use std::fmt;
 
@@ -1614,12 +1617,12 @@ pub mod g2 {
         }
     }
 
-        #[derive(Eq, PartialEq, Clone, Debug)]
+    #[derive(Eq, PartialEq, Clone, Debug)]
     pub struct G2Prepared {
-        pub p:                     G2Affine,
-        pub x_over_twist:          Fq3,
-        pub y_over_twist:          Fq3,
-        pub double_coefficients:   Vec<AteDoubleCoefficients>,
+        pub p: G2Affine,
+        pub x_over_twist: Fq3,
+        pub y_over_twist: Fq3,
+        pub double_coefficients: Vec<AteDoubleCoefficients>,
         pub addition_coefficients: Vec<AteAdditionCoefficients>,
     }
 
@@ -1632,10 +1635,10 @@ pub mod g2 {
 
     #[derive(Eq, PartialEq, Copy, Clone, Debug)]
     pub struct AteDoubleCoefficients {
-        pub c_h:  Fq3,
+        pub c_h: Fq3,
         pub c_4c: Fq3,
-        pub c_j:  Fq3,
-        pub c_l:  Fq3,
+        pub c_j: Fq3,
+        pub c_l: Fq3,
     }
 
     #[derive(Eq, PartialEq, Copy, Clone, Debug)]
@@ -1708,7 +1711,6 @@ pub mod g2 {
         crate::tests::curve::curve_tests::<G2>();
         crate::tests::curve::random_transformation_tests::<G2>();
     }
-
 }
 pub use self::g1::*;
 pub use self::g2::*;

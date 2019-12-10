@@ -1,7 +1,7 @@
 use super::fq::{Fq, FQ3_NQR_T, FQ3_T_MINUS_1, FROBENIUS_COEFF_FQ3_C1, FROBENIUS_COEFF_FQ3_C2};
-use ff::{Field, SqrtField };
+use ff::LegendreSymbol::{QuadraticNonResidue, QuadraticResidue, Zero};
+use ff::{Field, SqrtField};
 use rand::{Rand, Rng};
-use ff::LegendreSymbol::{ QuadraticNonResidue, QuadraticResidue, Zero };
 
 use std::cmp::Ordering;
 
@@ -43,7 +43,6 @@ impl PartialOrd for Fq3 {
 }
 
 impl Fq3 {
-
     #[inline(always)]
     pub fn mul_by_nonresidue(&mut self) {
         use std::mem::swap;
@@ -68,9 +67,9 @@ impl Fq3 {
         let mut self_to_p = *self;
         self_to_p.frobenius_map(1);
 
-        self_to_p.mul_assign(&self_to_p2); 
+        self_to_p.mul_assign(&self_to_p2);
         self_to_p.mul_assign(&self);
-        
+
         assert!(self_to_p.c1.is_zero() && self_to_p.c2.is_zero());
         self_to_p.c0
     }
@@ -326,9 +325,7 @@ fn legendre(x: &Fq3) -> ::ff::LegendreSymbol {
     x.norm().legendre()
 }
 
-
 impl SqrtField for Fq3 {
-    
     #[inline(always)]
     fn legendre(&self) -> ::ff::LegendreSymbol {
         legendre(self)
@@ -388,5 +385,3 @@ fn fq3_field_tests() {
     crate::tests::field::random_sqrt_tests::<Fq3>();
     crate::tests::field::random_frobenius_tests::<Fq3, _>(super::fq::Fq::char(), 13);
 }
-
-
