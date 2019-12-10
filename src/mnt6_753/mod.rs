@@ -462,12 +462,6 @@ impl G1Prepared {
     }
 }
 
-#[cfg(test)]
-use crate::{
-    ff::{ PrimeField },
-    CurveProjective,
-};
-
 #[test]
 fn mnt6_engine_tests() {
     crate::tests::engine::engine_tests::<Mnt6>();
