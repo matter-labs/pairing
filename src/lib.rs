@@ -104,7 +104,7 @@ pub trait Engine: ScalarEngine {
         G2: Into<Self::G2Affine>,
     {
         Self::final_exponentiation(&Self::miller_loop(
-            [(&(p.into().prepare()), &(q.into().prepare()))].into_iter(),
+            [(&(p.into().prepare()), &(q.into().prepare()))].iter(),
         )).unwrap()
     }
 }
@@ -231,6 +231,11 @@ pub trait CurveAffine:
     fn into_uncompressed(&self) -> Self::Uncompressed {
         <Self::Uncompressed as EncodedPoint>::from_affine(*self)
     }
+
+    /// Returns the (x,y) coordinates of the point
+    fn into_xy_unchecked(&self) -> (Self::Base, Self::Base);
+    /// Converts the provided (x,y) coordinates to a `CurveAffine` point
+    fn from_xy_unchecked(x: Self::Base, y: Self::Base) -> Self;
 }
 
 pub trait RawEncodable: CurveAffine {
