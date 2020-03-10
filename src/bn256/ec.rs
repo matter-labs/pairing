@@ -194,11 +194,26 @@ macro_rules! curve_impl {
             fn into_xy_unchecked(&self) -> (Self::Base, Self::Base) {
                 (self.x, self.y)
             }
+            fn into_xy(&self) -> Option<(Self::Base, Self::Base)> {
+                if self.is_zero() {
+                    None
+                } else {
+                    Some(self.into_xy_unchecked())
+                }
+            }
             fn from_xy_unchecked(x: Self::Base, y: Self::Base) -> Self {
                 Self {
                     x: x,
                     y: y,
                     infinity: false
+                }
+            }
+            fn from_xy(x: Self::Base, y: Self::Base) -> Option<Self> {
+                let point = Self::from_xy_unchecked(x, y);
+                if point.is_on_curve() {
+                    Some(point)
+                } else {
+                    None
                 }
             }
         }
