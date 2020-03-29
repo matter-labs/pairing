@@ -234,8 +234,14 @@ pub trait CurveAffine:
 
     /// Returns the (x,y) coordinates of the point
     fn into_xy_unchecked(&self) -> (Self::Base, Self::Base);
+    /// Returns the (x,y) coordinates of the point.
+    /// Returns `None` for zero points
+    fn into_xy(&self) -> Option<(Self::Base, Self::Base)>;
     /// Converts the provided (x,y) coordinates to a `CurveAffine` point
     fn from_xy_unchecked(x: Self::Base, y: Self::Base) -> Self;
+    /// Converts the provided (x,y) coordinates to a `CurveAffine` point.
+    /// Returns `None` if the point is not on curve
+    fn from_xy(x: Self::Base, y: Self::Base) -> Option<Self>;
 }
 
 pub trait RawEncodable: CurveAffine {
