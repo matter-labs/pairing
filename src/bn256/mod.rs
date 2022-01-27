@@ -29,12 +29,12 @@ pub const BN_U: u64 = 4965661367192848881;
 pub const SIX_U_PLUS_2_NAF : [i8; 65] = [
     0, 0, 0, 1, 0, 1, 0, -1,
     0, 0, 1, -1, 0, 0, 1, 0,
-    0, 1, 1, 0, -1, 0, 0, 1, 
+    0, 1, 1, 0, -1, 0, 0, 1,
     0, -1, 0, 0, 0, 0, 1, 1,
-	1, 0, 0, -1, 0, 0, 1, 0, 
+	1, 0, 0, -1, 0, 0, 1, 0,
     0, 0, 0, 0, -1, 0, 0, 1,
-	1, 0, 0, -1, 0, 0, 0, 1, 
-    1, 0, -1, 0, 0, 1, 0, 1, 
+	1, 0, 0, -1, 0, 0, 0, 1,
+    1, 0, -1, 0, 0, 1, 0, 1,
     1];
 
 
@@ -83,7 +83,7 @@ impl Engine for Bn256 {
         }
 
         let mut f = Fq12::one();
-        
+
         for i in (1..SIX_U_PLUS_2_NAF.len()).rev() {
             if i != SIX_U_PLUS_2_NAF.len() - 1 {
                 f.square();
@@ -401,7 +401,7 @@ impl G2Prepared {
 
             let mut ztsquared = r.z;
             ztsquared.square();
-            
+
             t10.sub_assign(&ztsquared);
 
             // corresponds to line 18
@@ -472,7 +472,7 @@ use rand::{Rand, SeedableRng, XorShiftRng};
 fn test_pairing() {
     use crate::{CurveProjective};
     let mut g1 = G1::one();
-    
+
     let mut g2 = G2::one();
     g2.double();
 

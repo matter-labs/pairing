@@ -4,10 +4,9 @@ mod fq12;
 mod fq2;
 mod fr;
 
+use pairing_ce::bn256::*;
+use pairing_ce::{CurveAffine, Engine};
 use rand::{Rand, SeedableRng, XorShiftRng};
-
-use pairing::bn256::*;
-use pairing::{CurveAffine, Engine};
 
 #[bench]
 fn bench_pairing_g1_preparation(b: &mut ::test::Bencher) {
