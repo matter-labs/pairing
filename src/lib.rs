@@ -1,4 +1,4 @@
-#![cfg_attr(feature = "asm", feature(asm))]
+#![cfg_attr(feature = "asm", feature(asm_const, asm_sym))]
 
 // `clippy` is a code linting tool for improving code quality by catching
 // common mistakes or strange code patterns. If the `cargo-clippy` feature
@@ -190,7 +190,7 @@ pub trait CurveProjective:
     fn as_xyz(&self) -> (&Self::Base, &Self::Base, &Self::Base) {
         unimplemented!("default implementation does not exist for this function")
     }
-    
+
     /// Returns underlying X, Y and Z coordinates. Users should check for infinity
     /// outside of this call
     fn into_xyz_unchecked(self) -> (Self::Base, Self::Base, Self::Base) {
@@ -265,7 +265,7 @@ pub trait CurveAffine:
     /// Returns references to underlying X and Y coordinates. Users should check for infinity
     /// outside of this call
     fn as_xy(&self) -> (&Self::Base, &Self::Base);
-    
+
     /// Returns underlying X and Y coordinates. Users should check for infinity
     /// outside of this call
     fn into_xy_unchecked(self) -> (Self::Base, Self::Base);
